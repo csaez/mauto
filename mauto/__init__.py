@@ -20,16 +20,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from mauto.api.macro import Macro
+from .api import library
 
 
 def show():
     pass
 
 
-def new(name):
-    return Macro(name)
+def list_macros():
+    return library.list_macros()
 
 
-def load(file_path):
-    return Macro.from_file(file_path)
+def new_macro(name):
+    return library.new_macro(name)
+
+
+def get_macro(name):
+    return library.get_macro(name)
+
+
+def remove_macro(name):
+    library.remove_macro(name)

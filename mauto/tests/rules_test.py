@@ -1,4 +1,4 @@
-import mauto.api.parser as p
+from ..api import parser as p
 
 
 def test_rules1():

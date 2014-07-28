@@ -20,8 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
 import json
-from mauto.api import parser
+from . import parser
 
 
 class Macro(object):
@@ -31,14 +32,18 @@ class Macro(object):
         self.name = name
         self.actions = list()
 
+        self._filepath = None
+        self._tempfile = "mauto_tempHistoryLog.txt"
+        self._recording = False
+
     @classmethod
     def from_file(cls, file_path):
         with open(file_path) as fp:
             data = json.load(fp)
-        validate = {"filetype": "mauto_macro", "version": 0.1}
-        if all([data.get(k) == v for k, v in validate.iteritems()]):
+        if cls.is_valid(file_path):
             m = cls(data["name"])
             m.actions = data["actions"]
+            m._filepath = file_path
             return m
 
     @classmethod
@@ -47,6 +52,13 @@ class Macro(object):
         m.actions = parser.parse(log)
         return m
 
+    @staticmethod
+    def is_valid(json_file):
+        with open(json_file) as fp:
+            data = json.load(fp)
+        validate = {"filetype": "mauto_macro", "version": 0.1}
+        return all([data.get(k) == v for k, v in validate.iteritems()])
+
     @property
     def inputs(self):
         t = dict()
@@ -54,6 +66,10 @@ class Macro(object):
             if v is None:
                 t[k] = v
         return t
+
+    @property
+    def recording(self):
+        return self._recording
 
     def _template(self):
         t = dict()
@@ -70,11 +86,17 @@ class Macro(object):
                     t[k] = lambda x=key, y=k.replace(key, ""): str(t[x]) + y
         return t
 
-    def record(self):
-        pass
+    @property
+    def filepath(self):
+        if hasattr(self, "_filepath"):
+            return self._filepath
 
-    def is_recording(self):
-        pass
+    def record(self):
+        if len(self.actions):
+            print "WARNING: %s actions are going to be overriden" % self.name
+        from maya import cmds as mc
+        mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
+        self._recording = True
 
     def play(self, inputs=None):
         from maya import cmds as mc
@@ -93,13 +115,36 @@ class Macro(object):
             for i, o in outputs:
                 ref[o] = lambda x=r[i]: x  # update outputs
 
-    def stop(self):
-        pass
+    def stop(self, clear_file=True):
+        if not self.recording:
+            return
+        from maya import cmds as mc
+        mc.scriptEditorInfo(writeHistory=False)
+        self._recording = False
+        _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
+        with open(_tempfile, "w") as f:
+            log = f.read()
+            if clear_file:
+                f.write("")  # clear temp file
+        self.actions = parser.parse(log)
 
-    def save(self, file_path):
+    def pause(self):
+        self.stop(clear_file=False)
+
+    def save(self):
+        if self.filepath:
+            return self.export(self.filepath)
+        return False
+
+    def export(self, file_path):
         data = {"name": self.name,
                 "actions": self.actions,
                 "filetype": "mauto_macro",
                 "version": 0.1}
         with open(file_path, "w") as fp:
-            json.dump(data, fp, indent=2, separators=[":", ","])
+            json.dump(data, fp, indent=2, separators=[",", ":"])
+        return True
+
+    def __del__(self):
+        if self._filepath:
+            os.remove(self._filepath)
