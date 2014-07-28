@@ -38,19 +38,25 @@ through its `setup.py` script (_highly recommended!_).
     # ... or use it through the python api.
 
     # create a new macro
-    m = mauto.new("my_macro")
+    m = mauto.new_macro("my_macro")
     m.record()
     m.stop()
-    m.save("path/to/my/macro.json")
 
-    # load an existing macro
-    m = mauto.load("path/to/my/macro.json")
+    # list existing macros
+    mauto.list_macros()
+
+    # load a macro from the library
+    m = mauto.get_macro("my_macro")
     m.play()
     
     # redefine external inputs
     refs = m.inputs #  dict of external references
     refs["locator1"] = "pCube"
     m.play(refs)
+
+### Running the test suite
+
+    mayapy setup.py nosetests
 
 
 ## Contributing
