@@ -20,69 +20,51 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sys
+import os
+from .macro import Macro
+
+HOME_DIR = os.path.normpath(os.path.join(os.path.expanduser("~"), "mauto"))
+EXTRA_DIR = os.environ.get("MAUTO_PATH")
+
+if not os.path.exists(HOME_DIR):
+    os.makedirs(HOME_DIR)
 
 
-class PseudoModule(object):
-    import os
-    from .macro import Macro
+def macros():
+    macros = set()
+    for d in (HOME_DIR, EXTRA_DIR):
+        if not d:
+            continue
+        for f in os.listdir(d):
+            filepath = os.path.join(d, f)
+            if os.path.isfile(filepath) and filepath.endswith(".json"):
+                macros.add(Macro.from_file(filepath))
+    return macros
 
-    HOME_DIR = os.path.normpath(os.path.join(os.path.expanduser("~"), "mauto"))
-    EXTRA_DIR = os.environ.get("MAUTO_PATH")
 
-    def __init__(self):
-        super(PseudoModule, self).__init__()
-        if not self.os.path.exists(self.HOME_DIR):
-            self.os.makedirs(self.HOME_DIR)
+def list_macros():
+    return [m.name for m in macros()]
 
-    @property
-    def macros(self):
-        if hasattr(self, "_macros"):
-            return self._macros
-        self._macros = self.get_macros()
-        return self._macros
 
-    def get_macros(self):
-        macros = set()
-        for d in (self.HOME_DIR, self.EXTRA_DIR):
-            if not d:
-                continue
-            for f in self.os.listdir(d):
-                filepath = self.os.path.join(d, f)
-                if self.os.path.isfile(filepath) and filepath.endswith(".json"):
-                    macros.add(self.Macro.from_file(filepath))
-        return macros
+def get_macro(name):
+    for m in macros():
+        if m.name == name:
+            return m
+    return None
 
-    def list_macros(self):
-        return [m.name for m in self.macros]
 
-    def get_macro(self, name):
-        for m in self.macros:
-            if m.name == name:
-                return m
+def new_macro(name):
+    if name in list_macros():
+        print "Warning: name collision"
         return None
-
-    def new_macro(self, name):
-        if name in self.list_macros():
-            print "Warning: name collision"
-            return None
-        m = self.Macro(name)
-        m.export(self.os.path.join(self.HOME_DIR, "%s.json" % name))
-        self.add_macro(m)
-        return m
-
-    def add_macro(self, macro):
-        self._macros.add(macro)
-
-    def remove_macro(self, name):
-        m = self.get_macro(name)
-        if not m:
-            print "Macro not found"
-            return
-        self._macros.discard(m)
-        del m
+    m = Macro(name)
+    m.export(os.path.join(HOME_DIR, "%s.json" % name))
+    return m
 
 
-# this is a hack to use classes' magic methods on modules,
-# does the trick overriding the modules cache with a class instance
-sys.modules[__name__] = PseudoModule()
+def remove_macro(name):
+    m = get_macro(name)
+    if not m:
+        print "Macro not found"
+        return
+    m.destroy()

@@ -145,6 +145,6 @@ class Macro(object):
             json.dump(data, fp, indent=2, separators=[",", ":"])
         return True
 
-    def __del__(self):
-        if self._filepath:
-            os.remove(self._filepath)
+    def destroy(self):
+        if self.filepath and os.path.exists(self.filepath):
+            os.remove(self.filepath)
