@@ -24,19 +24,22 @@ import os
 import importlib
 
 EXCLUDE = ("marking", "mode")
-PARSING_RULES = dict()
 
-rules_path = os.path.join(os.path.dirname(__file__), "rules")
-rules = list()
-for name in os.listdir(rules_path):
-    full_name = os.path.join(rules_path, name)
-    if os.path.isfile(full_name) and "__init__" not in name:
-        rules.append(name.split(".")[0])
-for r in rules:
+_NULL = lambda x: (None, list(), dict(), list())
+PARSING_RULES = {"null": _NULL,
+                 "createlocator": _NULL,
+                 }  # <- map specific rules here
+
+# fill PARSING_RULES with ./rules/*.py
+_rp = os.path.join(os.path.dirname(__file__), "rules")
+_rules = list()
+for n in os.listdir(_rp):
+    fn = os.path.join(_rp, n)
+    if os.path.isfile(fn) and "__init__" not in n:
+        _rules.append(n.split(".")[0])
+for r in _rules:
     m = importlib.import_module("mauto.api.rules.%s" % r)
     PARSING_RULES[r] = getattr(m, "rule")
-PARSING_RULES["null"] = lambda x: (None, list(), dict(), list())
-PARSING_RULES["createlocator"] = PARSING_RULES["null"]
 
 
 def parse(log):

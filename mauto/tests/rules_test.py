@@ -11,7 +11,7 @@ def test_rules2():
 
 def test_rules3():
     r = ['base', 'null', 'setattr', 'select', 'createlocator']
-    assert p.PARSING_RULES.keys() == r
+    assert all([x in r for x in p.PARSING_RULES.keys()])
 
 
 def test_cleanup1():
