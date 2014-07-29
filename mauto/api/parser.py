@@ -26,8 +26,7 @@ import importlib
 EXCLUDE = ("marking", "mode")
 
 _NULL = lambda x: (None, list(), dict(), list())
-PARSING_RULES = {"null": _NULL,
-                 "createlocator": _NULL,
+PARSING_RULES = {"createlocator": _NULL,
                  }  # <- map specific rules here
 
 # fill PARSING_RULES with ./rules/*.py

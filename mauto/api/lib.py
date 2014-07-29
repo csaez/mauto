@@ -43,8 +43,8 @@ class Lib(dict):
             for f in os.listdir(d):
                 filepath = os.path.join(d, f)
                 if os.path.isfile(filepath) and filepath.endswith(".json"):
-                    m = Macro.from_file(filepath)
-                    if m:
+                    if Macro.is_valid(filepath):
+                        m = Macro.from_file(filepath)
                         self.__setitem__(m.name, m)
 
     def new_macro(self, name):

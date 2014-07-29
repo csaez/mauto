@@ -36,6 +36,11 @@ def test_valid1():
     os.remove(fp)
     assert r
 
+@with_setup(setup, teardown)
+def test_fromfile():
+    fp = mauto.get_macro("testsuite").filepath
+    assert Macro.from_file(fp)
+
 
 @with_setup(setup, teardown)
 def test_valid2():
@@ -43,8 +48,14 @@ def test_valid2():
     assert Macro.is_valid(fp) == True
 
 
-# def test_pause():
-#     m = Macro("testsuite")
-#     m.record()
-#     m.pause()
-#     assert m.recording == False
+def test_pause1():
+    m = Macro("testsuite")
+    m.record()
+    m.pause()
+    assert m.recording == False
+
+
+def test_pause2():
+    m = Macro("testsuite")
+    m.pause()
+    assert m.recording == False

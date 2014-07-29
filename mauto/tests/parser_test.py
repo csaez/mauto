@@ -6,11 +6,11 @@ def test_rules1():
 
 
 def test_rules2():
-    assert len(p.PARSING_RULES) == 5
+    assert len(p.PARSING_RULES) >= 4
 
 
 def test_rules3():
-    r = ['base', 'null', 'setattr', 'select', 'createlocator']
+    r = ['base', 'setattr', 'select', 'createlocator']
     assert all([x in r for x in p.PARSING_RULES.keys()])
 
 
@@ -70,5 +70,13 @@ def test_select4():
 def test_setattr1():
     l = 'setAttr "locator1.rotateY" 0;'
     r = [('setAttr', ['locator1.rotateY', 0], {}, [])]
-    print p.parse(l)
     assert p.parse(l) == r
+
+def test_comment1():
+    l = """spaceLocator -p 0 0 0;
+// Result: locator1 //;"""
+    assert p.parse(l) == [('spaceLocator', [], {'p': [0, 0, 0]}, ['locator1'])]
+
+def test_comment():
+    l = "// any kind of comment here"
+    assert p.parse(l) == []

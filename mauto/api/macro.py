@@ -106,7 +106,7 @@ class Macro(object):
         Start recording a log with the actions done in the Maya GUI.
         """
         if len(self.actions):
-            print "WARNING: %s actions are going to be overriden" % self.name
+            print "WARNING: %s actions will be overriden" % self.name
         mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
         self._recording = True
 
@@ -131,27 +131,26 @@ class Macro(object):
             for i, o in outputs:
                 ref[o] = lambda x=r[i]: x  # update outputs
 
-    def stop(self, clear_file=True):
+    def stop(self):
         """
         Stops the recording and parse the internal log.
         """
-        if not self.recording:
-            return
-        mc.scriptEditorInfo(writeHistory=False)
-        self._recording = False
+        self.pause()
+        # retrieve log
         _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
         with open(_tempfile, "w") as f:
             log = f.read()
-            if clear_file:
-                f.write("")  # clear temp file
-        self.actions = parser.parse(log)
+            f.write("")  # clear temp file
+        self.actions = parser.parse(log)  # parse log
 
     def pause(self):
         """
         Pauses the recording, unlike stop() this method and can be resumed
         calling play().
         """
-        self.stop(clear_file=False)
+        if self.recording:
+            mc.scriptEditorInfo(writeHistory=False)
+            self._recording = False
 
     def save(self):
         """
@@ -159,8 +158,7 @@ class Macro(object):
         (self.filepath).
         """
         if self.filepath:
-            return self.export(self.filepath)
-        return False
+            self.export(self.filepath)
 
     def export(self, filepath):
         """
@@ -172,4 +170,3 @@ class Macro(object):
                 "version": 0.1}
         with open(filepath, "w") as fp:
             json.dump(data, fp, indent=2, separators=[",", ":"])
-        return True
