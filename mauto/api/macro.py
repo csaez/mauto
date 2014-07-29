@@ -20,8 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
 import json
 from . import parser
+
+try:
+    from maya import cmds as mc
+except ImportError, err:
+    print "ImportError:", __file__
+    print err
 
 
 class Macro(object):
@@ -37,6 +44,9 @@ class Macro(object):
 
     @classmethod
     def from_file(cls, filepath):
+        """
+        De-serialize an instance from the filepath argument (json file).
+        """
         if cls.is_valid(filepath):
             with open(filepath) as fp:
                 data = json.load(fp)
@@ -45,32 +55,35 @@ class Macro(object):
             m.filepath = filepath
             return m
 
-    @classmethod
-    def from_log(cls, name, log):
-        m = cls(name)
-        m.actions = parser.parse(log)
-        return m
-
     @staticmethod
-    def is_valid(json_file):
-        with open(json_file) as fp:
+    def is_valid(filepath):
+        """
+        Returns a bool validating the file at filepath.
+        """
+        if not os.path.exists(filepath):
+            return False
+        with open(filepath) as fp:
             try:
                 data = json.load(fp)
-            except ValueError:
+            except:
                 return False
         validate = {"filetype": "mauto_macro", "version": 0.1}
         return all([data.get(k) == v for k, v in validate.iteritems()])
 
     @property
     def inputs(self):
-        t = dict()
-        for k, v in self._template(self.actions).iteritems():
-            if v is None:
-                t[k] = v
-        return t
+        """
+        Returns a dict of the macro's external references.
+        This dict is usually used as a template for the custom inputs
+        passed to play().
+        """
+        return dict([(k, v) for k, v in self._template().iteritems() if v is None])
 
     @property
     def recording(self):
+        """
+        Returns a bool indicating wether the macro is recording or not.
+        """
         return self._recording
 
     def _template(self):
@@ -89,17 +102,23 @@ class Macro(object):
         return t
 
     def record(self):
+        """
+        Start recording a log with the actions done in the Maya GUI.
+        """
         if len(self.actions):
             print "WARNING: %s actions are going to be overriden" % self.name
-        from maya import cmds as mc
         mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
         self._recording = True
 
     def play(self, inputs=None):
-        from maya import cmds as mc
+        """
+        Run the macro.
+        If inputs is passed, it replaces the external references by the
+        ones on the incoming dict. Otherwise it look for the same references
+        as the ones used when the macro was recorded."""
         # default value
         if not inputs:
-            inputs = dict()
+            inputs = dict([(k, k) for k in self.inputs.keys()])
         # merge input with internal refs
         ref = self._template()
         ref.update(inputs)
@@ -113,9 +132,11 @@ class Macro(object):
                 ref[o] = lambda x=r[i]: x  # update outputs
 
     def stop(self, clear_file=True):
+        """
+        Stops the recording and parse the internal log.
+        """
         if not self.recording:
             return
-        from maya import cmds as mc
         mc.scriptEditorInfo(writeHistory=False)
         self._recording = False
         _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
@@ -126,14 +147,25 @@ class Macro(object):
         self.actions = parser.parse(log)
 
     def pause(self):
+        """
+        Pauses the recording, unlike stop() this method and can be resumed
+        calling play().
+        """
         self.stop(clear_file=False)
 
     def save(self):
+        """
+        Save/serialize the current state of the macro to disk
+        (self.filepath).
+        """
         if self.filepath:
             return self.export(self.filepath)
         return False
 
     def export(self, filepath):
+        """
+        Serialize the macro to the filepath passed as argument.
+        """
         data = {"name": self.name,
                 "actions": self.actions,
                 "filetype": "mauto_macro",
