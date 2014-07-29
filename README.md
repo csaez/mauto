@@ -10,14 +10,11 @@ line of code.
 
 ## Dependencies
 
-- [Autodesk Maya](http://www.autodesk.com/products/autodesk-maya/overview)
-- [PySide](http://qt-project.org/wiki/PySide) (included with Maya 2014+)
+- [PySide](http://qt-project.org/wiki/PySide)
+- [Nose](https://nose.readthedocs.org/en/latest/) (testing)
 
 > `mauto` has been tested on Maya 2014+ but it should run in older
 versions, please let me know if you find any issues.
-
-### Testing:
-- [Nose](https://nose.readthedocs.org/en/latest/)
 
 
 ## Installation
@@ -49,12 +46,14 @@ through its `setup.py` script (_highly recommended!_).
     m = mauto.get_macro("my_macro")
     m.play()
     
-    # redefine external inputs
-    refs = m.inputs #  dict of external references
+    # redefine inputs
+    m = mauto.get_macro("my_macro")
+    refs = m.inputs #  dict of ext references
     refs["locator1"] = "pCube"
     m.play(refs)
 
-### Running the test suite
+
+Running the tests:
 
     mayapy setup.py nosetests
 
