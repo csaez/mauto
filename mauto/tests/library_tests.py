@@ -1,45 +1,45 @@
-from ..api import library as lib
+import os
+from nose import with_setup
+from ..api import library as l
 
 
-def test_macros():
-    assert isinstance(lib.macros(), set)
+def setup():
+    return l.new_macro("testsuite")
 
 
-def test_list_macros():
-    assert len(lib.list_macros()) == len(lib.macros())
+def teardown():
+    n = "testsuite"
+    if l.get(n):
+        del l[n]
+
+def test_get_macro():
+    n = "unexistent_macro"
+    assert l.get(n) is None
 
 
-def test_get_macro1():
-    n = "macro_testsuite"
-    assert lib.get_macro(n) is None
-
-
+@with_setup(setup, teardown)
 def test_get_macro2():
-    n = "macro_testsuite"
-    lib.new_macro(n)
-    r = lib.get_macro(n) is not None
-    lib.remove_macro(n)
-    assert r
+    assert l.get("testsuite") is not None
 
 
+@with_setup(setup, teardown)
 def test_get_macro3():
-    n = "macro_testsuite"
-    lib.new_macro(n)
-    r = lib.get_macro(n).name == n
-    lib.remove_macro(n)
-    assert r
+    assert l.get("testsuite").name == "testsuite"
 
 
+@with_setup(setup, teardown)
 def test_new_macro():
-    n = "macro_testsuite"
-    m = lib.new_macro(n)
-    r = type(m).__name__ == "Macro"
-    lib.remove_macro(n)
-    assert r
+    assert type(l.get("testsuite")).__name__ == "Macro"
 
 
-def test_remove_macro():
-    n = "macro_testsuite"
-    lib.new_macro(n)
-    lib.remove_macro(n)
-    assert n not in lib.list_macros()
+@with_setup(setup, teardown)
+def test_remove_macro1():
+    del l["testsuite"]
+    assert l.get("testsuite") is None
+
+
+@with_setup(setup, teardown)
+def test_remove_macro2():
+    fp = l.get("testsuite").filepath
+    del l["testsuite"]
+    assert os.path.exists(fp) is False

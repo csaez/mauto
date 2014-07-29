@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
 import json
 from . import parser
 
@@ -32,18 +31,18 @@ class Macro(object):
         self.name = name
         self.actions = list()
 
-        self._filepath = None
+        self.filepath = None
         self._tempfile = "mauto_tempHistoryLog.txt"
         self._recording = False
 
     @classmethod
-    def from_file(cls, file_path):
-        with open(file_path) as fp:
-            data = json.load(fp)
-        if cls.is_valid(file_path):
+    def from_file(cls, filepath):
+        if cls.is_valid(filepath):
+            with open(filepath) as fp:
+                data = json.load(fp)
             m = cls(data["name"])
             m.actions = data["actions"]
-            m._filepath = file_path
+            m.filepath = filepath
             return m
 
     @classmethod
@@ -55,7 +54,10 @@ class Macro(object):
     @staticmethod
     def is_valid(json_file):
         with open(json_file) as fp:
-            data = json.load(fp)
+            try:
+                data = json.load(fp)
+            except ValueError:
+                return False
         validate = {"filetype": "mauto_macro", "version": 0.1}
         return all([data.get(k) == v for k, v in validate.iteritems()])
 
@@ -85,11 +87,6 @@ class Macro(object):
                 if key + "." in k and key != k:
                     t[k] = lambda x=key, y=k.replace(key, ""): str(t[x]) + y
         return t
-
-    @property
-    def filepath(self):
-        if hasattr(self, "_filepath"):
-            return self._filepath
 
     def record(self):
         if len(self.actions):
@@ -136,15 +133,11 @@ class Macro(object):
             return self.export(self.filepath)
         return False
 
-    def export(self, file_path):
+    def export(self, filepath):
         data = {"name": self.name,
                 "actions": self.actions,
                 "filetype": "mauto_macro",
                 "version": 0.1}
-        with open(file_path, "w") as fp:
+        with open(filepath, "w") as fp:
             json.dump(data, fp, indent=2, separators=[",", ":"])
         return True
-
-    def destroy(self):
-        if self.filepath and os.path.exists(self.filepath):
-            os.remove(self.filepath)

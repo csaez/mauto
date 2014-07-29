@@ -28,7 +28,7 @@ def show():
 
 
 def list_macros():
-    return library.list_macros()
+    return library.keys()
 
 
 def new_macro(name):
@@ -36,8 +36,9 @@ def new_macro(name):
 
 
 def get_macro(name):
-    return library.get_macro(name)
+    return library.get(name)
 
 
 def remove_macro(name):
-    library.remove_macro(name)
+    if library.get(name):
+        del library[name]
