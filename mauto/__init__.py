@@ -41,4 +41,4 @@ def get_macro(name):
 
 def remove_macro(name):
     if library.get(name):
-        del library[name]
+        library.remove_macro(name)

@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import os
+import json
 from . import Macro
 
 
@@ -43,8 +44,10 @@ class Lib(dict):
             for f in os.listdir(d):
                 filepath = os.path.join(d, f)
                 if os.path.isfile(filepath) and filepath.endswith(".json"):
-                    if Macro.is_valid(filepath):
-                        m = Macro.from_file(filepath)
+                    with open(filepath) as fp:
+                        data = json.load(fp)
+                    if Macro.is_valid(data):
+                        m = Macro.from_data(data)
                         self.__setitem__(m.name, m)
 
     def new_macro(self, name):
@@ -53,12 +56,18 @@ class Lib(dict):
             return None
         m = Macro(name)
         m.filepath = os.path.join(self.HOME_DIR, "%s.json" % name)
-        m.save()
         self.__setitem__(name, m)
-        return m
+        self.save_macro(name)
+        return self.get(name)
 
-    def __delitem__(self, name):
+    def save_macro(self, name):
+        m = self.__getitem__(name)
+        with open(os.path.join(self.HOME_DIR, "%s.json" % name), "w") as fp:
+            json.dump(m.serialize(), fp)
+        return os.path.exists(os.path.join(self.HOME_DIR, "%s.json" % name))
+
+    def remove_macro(self, name):
         fp = self.__getitem__(name).filepath if self.get(name) else None
-        super(Lib, self).__delitem__(name)
+        self.__delitem__(name)
         if fp and os.path.exists(fp):
             os.remove(fp)

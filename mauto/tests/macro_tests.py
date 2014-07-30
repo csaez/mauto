@@ -25,27 +25,23 @@ def test_record():
 
 
 def test_valid():
-    assert Macro.is_valid("invalid/file/path") == False
+    assert Macro.is_valid("invalid_data") == False
 
 
 def test_valid1():
-    fp = os.path.normpath(os.path.join(os.path.expanduser("~"), "temp.json"))
-    with open(fp, "w") as f:
-        f.write("invalid file contents")
-    r = Macro.is_valid(fp) == False  # test
-    os.remove(fp)
-    assert r
+    assert Macro.is_valid({"filetype": "mauto_macro"}) == False
+
 
 @with_setup(setup, teardown)
 def test_fromfile():
-    fp = mauto.get_macro("testsuite").filepath
-    assert Macro.from_file(fp)
+    d = mauto.get_macro("testsuite").serialize()
+    assert Macro.from_data(d) is not None
 
 
 @with_setup(setup, teardown)
 def test_valid2():
-    fp = mauto.get_macro("testsuite").filepath
-    assert Macro.is_valid(fp) == True
+    d = mauto.get_macro("testsuite").serialize()
+    assert Macro.is_valid(d) == True
 
 
 def test_pause1():

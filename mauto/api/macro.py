@@ -20,8 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-import json
 from . import parser
 
 try:
@@ -43,32 +41,25 @@ class Macro(object):
         self._recording = False
 
     @classmethod
-    def from_file(cls, filepath):
+    def from_data(cls, data):
         """
         De-serialize an instance from the filepath argument (json file).
         """
-        if cls.is_valid(filepath):
-            with open(filepath) as fp:
-                data = json.load(fp)
+        if cls.is_valid(data):
             m = cls(data["name"])
-            m.actions = data["actions"]
-            m.filepath = filepath
+            m.deserialize(data)
             return m
 
     @staticmethod
-    def is_valid(filepath):
+    def is_valid(data):
         """
-        Returns a bool validating the file at filepath.
+        Returns a bool validating the data.
         """
-        if not os.path.exists(filepath):
+        try:
+            validate = {"filetype": "mauto_macro", "version": 0.1}
+            return all([data.get(k) == v for k, v in validate.iteritems()])
+        except AttributeError:
             return False
-        with open(filepath) as fp:
-            try:
-                data = json.load(fp)
-            except:
-                return False
-        validate = {"filetype": "mauto_macro", "version": 0.1}
-        return all([data.get(k) == v for k, v in validate.iteritems()])
 
     @property
     def inputs(self):
@@ -105,8 +96,6 @@ class Macro(object):
         """
         Start recording a log with the actions done in the Maya GUI.
         """
-        if len(self.actions):
-            print "WARNING: %s actions will be overriden" % self.name
         mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
         self._recording = True
 
@@ -152,21 +141,18 @@ class Macro(object):
             mc.scriptEditorInfo(writeHistory=False)
             self._recording = False
 
-    def save(self):
-        """
-        Save/serialize the current state of the macro to disk
-        (self.filepath).
-        """
-        if self.filepath:
-            self.export(self.filepath)
-
-    def export(self, filepath):
-        """
-        Serialize the macro to the filepath passed as argument.
-        """
-        data = {"name": self.name,
+    def serialize(self):
+        """Returns a dict with macro's data."""
+        return {"name": self.name,
                 "actions": self.actions,
                 "filetype": "mauto_macro",
                 "version": 0.1}
-        with open(filepath, "w") as fp:
-            json.dump(data, fp, indent=2, separators=[",", ":"])
+
+    def deserialize(self, data):
+        """Fills up the macro using the incoming data dict."""
+        if self.is_valid(data):
+            self.name = data.get("name")
+            self.actions = data.get("actions")
+            self.filetype = data.get("filetype")
+            self.version = data.get("version")
+        return self.is_valid(data)
