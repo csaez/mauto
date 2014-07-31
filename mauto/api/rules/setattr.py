@@ -25,9 +25,9 @@ from . import base
 
 def rule(sloc):
     command, args, kwds, out = base.rule(sloc)
-    for k, v in kwds.iteritems():
-        if isinstance(v, list):
-            v = v[0] if len(v) > 2 else 1
-        kwds[k] = v
-    args = [base.eval_data(x) for x in sloc.split(" ")[-2:]]
-    return command, args, kwds, out
+    attr = base.eval_data(sloc.split(" ")[1])
+    v = sloc.replace(command, "").replace('"%s"' % attr, "")
+    v = base.remove_headtail(v)
+    v = [base.eval_data(x)
+         for x in v.split(" ")] if len(v.split(" ")) > 1 else base.eval_data(v)
+    return command, [attr, v], {}, out

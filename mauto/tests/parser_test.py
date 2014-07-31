@@ -26,7 +26,23 @@ def test_cleanup2():
     assert p.parse(l) == r
 
 
+def test_base():
+    log = "select -cl ;"
+    assert p.parse(log) == [('select', [], {'cl': 1}, [])]
+
+
 def test_base1():
+    l = 'select -add locator1;'
+    assert p.parse(l) == [('select', ['locator1'], {'add': 1}, [])]
+
+
+def test_base2():
+    l = 'select -add 0 locator1 locator2;'
+    r = [('select', ['locator1', 'locator2'], {'add': 0}, [])]
+    assert p.parse(l) == r
+
+
+def test_base3():
     l = 'polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 0.6151959098 -pvy 0.3039012501 -pvz -1.076895647 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 ;'
     r = [('polyExtrudeFacet', [],
           {'divisions': 1,
@@ -41,17 +57,6 @@ def test_base1():
          'keepFacesTogether': 1,
          'constructionHistory': 1},
         [])]
-    assert p.parse(l) == r
-
-
-def test_select1():
-    l = 'select -add locator1;'
-    assert p.parse(l) == [('select', ['locator1'], {'add': 1}, [])]
-
-
-def test_select2():
-    l = 'select -add 0 locator1 locator2;'
-    r = [('select', ['locator1', 'locator2'], {'add': 0}, [])]
     assert p.parse(l) == r
 
 
@@ -72,10 +77,17 @@ def test_setattr1():
     r = [('setAttr', ['locator1.rotateY', 0], {}, [])]
     assert p.parse(l) == r
 
+
+def test_setattr2():
+    log = 'setAttr "locator1.vector3" 0 0 0;'
+    assert p.parse(log) == [('setAttr', ['locator1.vector3', [0, 0, 0]], {}, [])]
+
+
 def test_comment1():
     l = """spaceLocator -p 0 0 0;
 // Result: locator1 //;"""
     assert p.parse(l) == [('spaceLocator', [], {'p': [0, 0, 0]}, ['locator1'])]
+
 
 def test_comment():
     l = "// any kind of comment here"

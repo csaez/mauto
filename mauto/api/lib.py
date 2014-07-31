@@ -26,19 +26,18 @@ from . import Macro
 
 
 class Lib(dict):
-
-    HOME_DIR = os.path.normpath(os.path.join(os.path.expanduser("~"), "mauto"))
     EXTRA_DIR = os.environ.get("MAUTO_PATH")
 
-    def __init__(self):
+    def __init__(self, repo):
         super(Lib, self).__init__()
-        if not os.path.exists(self.HOME_DIR):
-            os.makedirs(self.HOME_DIR)
+        self.repo = repo
+        if not os.path.exists(self.repo):
+            os.makedirs(self.repo)
         self.reload()
 
     def reload(self):
         self.clear()
-        for d in (self.HOME_DIR, self.EXTRA_DIR):
+        for d in (self.repo, self.EXTRA_DIR):
             if not d:
                 continue
             for f in os.listdir(d):
@@ -55,19 +54,21 @@ class Lib(dict):
             print "Warning: name collision"
             return None
         m = Macro(name)
-        m.filepath = os.path.join(self.HOME_DIR, "%s.json" % name)
+        m.filepath = os.path.join(self.repo, "%s.json" % name)
         self.__setitem__(name, m)
         self.save_macro(name)
         return self.get(name)
 
     def save_macro(self, name):
         m = self.__getitem__(name)
-        with open(os.path.join(self.HOME_DIR, "%s.json" % name), "w") as fp:
+        with open(os.path.join(self.repo, "%s.json" % name), "w") as fp:
             json.dump(m.serialize(), fp)
-        return os.path.exists(os.path.join(self.HOME_DIR, "%s.json" % name))
+        return os.path.exists(os.path.join(self.repo, "%s.json" % name))
 
     def remove_macro(self, name):
         fp = self.__getitem__(name).filepath if self.get(name) else None
         self.__delitem__(name)
         if fp and os.path.exists(fp):
             os.remove(fp)
+
+library = Lib(os.path.normpath(os.path.join(os.path.expanduser("~"), "mauto")))

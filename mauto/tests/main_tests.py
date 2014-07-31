@@ -11,7 +11,7 @@ def teardown():
 
 
 def test_show():
-    assert True
+    assert mauto.show() == True
 
 
 @with_setup(setup, teardown)

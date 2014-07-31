@@ -1,59 +1,70 @@
 import os
 from nose import with_setup
-from ..api import library as l
+from ..api.lib import Lib, library
 
 
 def setup():
-    return l.new_macro("testsuite")
+    return library.new_macro("testsuite")
 
 
 def teardown():
     n = "testsuite"
-    if l.get(n):
-        l.remove_macro(n)
+    if library.get(n):
+        library.remove_macro(n)
 
 
 def test_get_macro():
     n = "unexistent_macro"
-    assert l.get(n) is None
+    assert library.get(n) is None
 
 
 @with_setup(setup, teardown)
 def test_get_macro2():
-    assert l.get("testsuite") is not None
+    assert library.get("testsuite") is not None
 
 
 @with_setup(setup, teardown)
 def test_get_macro3():
-    assert l.get("testsuite").name == "testsuite"
+    assert library.get("testsuite").name == "testsuite"
 
 
 @with_setup(setup, teardown)
 def test_new_macro():
-    assert type(l.get("testsuite")).__name__ == "Macro"
+    assert type(library.get("testsuite")).__name__ == "Macro"
 
 
 @with_setup(setup, teardown)
 def test_remove_macro1():
-    l.remove_macro("testsuite")
-    assert l.get("testsuite") is None
+    library.remove_macro("testsuite")
+    assert library.get("testsuite") is None
 
 
 @with_setup(setup, teardown)
 def test_remove_macro2():
-    fp = l.get("testsuite").filepath
-    l.remove_macro("testsuite")
+    fp = library.get("testsuite").filepath
+    library.remove_macro("testsuite")
     assert os.path.exists(fp) is False
 
 
 @with_setup(setup, teardown)
 def test_save_macro():
-    assert l.save_macro("testsuite")
+    assert library.save_macro("testsuite")
 
 
 @with_setup(setup, teardown)
 def test_reload():
-    lenA = len(l)
-    l.clear()
-    l.reload()
-    assert len(l) == lenA
+    lenA = len(library)
+    library.clear()
+    library.reload()
+    assert len(library) == lenA
+
+
+def test_newrepo():
+    new_repo = os.path.normpath(
+        os.path.join(os.path.expanduser("~"), "temp_mauto"))
+    if os.path.exists(new_repo):
+        os.removedirs(new_repo)
+    Lib(new_repo)
+    r = os.path.exists(new_repo)
+    os.removedirs(new_repo)
+    assert r

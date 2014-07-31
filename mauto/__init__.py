@@ -24,7 +24,7 @@ from .api import library
 
 
 def show():
-    pass
+    return True
 
 
 def list_macros():
