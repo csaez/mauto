@@ -43,17 +43,28 @@ class Macro(object):
     @classmethod
     def from_data(cls, data):
         """
-        De-serialize an instance from the filepath argument (json file).
+        De-serialize an instance from data dict.
         """
         if cls.is_valid(data):
             m = cls(data["name"])
             m.deserialize(data)
             return m
 
+    @classmethod
+    def from_log(cls, name, log):
+        """
+        Create a new macro from a log str.
+        """
+        data = {"name": name,
+                "actions": parser.parse(log),
+                "filetype": "mauto_macro",
+                "version": 0.1}
+        return cls.from_data(data)
+
     @staticmethod
     def is_valid(data):
         """
-        Returns a bool validating the data.
+        Returns a bool validating data dict.
         """
         try:
             validate = {"filetype": "mauto_macro", "version": 0.1}
@@ -107,29 +118,34 @@ class Macro(object):
         as the ones used when the macro was recorded."""
         # default value
         if not inputs:
-            inputs = dict([(k, k) for k in self.inputs.keys()])
+            inputs = dict([(k, lambda _=k: _) for k in self.inputs.keys()])
         # merge input with internal refs
         ref = self._template()
         ref.update(inputs)
         # run
+        mc.undoInfo(openChunk=True)  # start grouping undo
         for command, args, kwds, outputs in self.actions:
-            if not command:
-                continue
-            args = [ref[a]() for a in args]  # solve runtime args
-            r = getattr(mc, command)(*args, **kwds)
-            for i, o in outputs:
-                ref[o] = lambda x=r[i]: x  # update outputs
+            if command:
+                # solve runtime args
+                args = [ref[a]() for a in args if ref.get(a)]
+                # run command
+                r = getattr(mc, command)(*args, **kwds)
+                # update outputs
+                for i, o in enumerate(outputs):
+                    ref[o] = lambda x=r[i]: x
+        mc.undoInfo(closeChunk=True)  # end grouping undo
+        return True
 
     def stop(self):
         """
-        Stops the recording and parse the internal log.
+        Stops recording and parse the internal log.
         """
         self.pause()
         # retrieve log
         _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
-        with open(_tempfile, "w") as f:
-            log = f.read()
-            f.write("")  # clear temp file
+        with open(_tempfile, "w") as fp:
+            log = fp.read()
+            fp.write("")  # clear temp file
         self.actions = parser.parse(log)  # parse log
 
     def pause(self):

@@ -49,11 +49,11 @@ class Lib(dict):
                         m = Macro.from_data(data)
                         self.__setitem__(m.name, m)
 
-    def new_macro(self, name):
+    def new_macro(self, name, log=None):
         if self.get(name):
             print "Warning: name collision"
             return None
-        m = Macro(name)
+        m = Macro(name) if not log else Macro.from_log(name, log)
         m.filepath = os.path.join(self.repo, "%s.json" % name)
         self.__setitem__(name, m)
         self.save_macro(name)

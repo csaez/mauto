@@ -31,8 +31,8 @@ def list_macros():
     return library.keys()
 
 
-def new_macro(name):
-    return library.new_macro(name)
+def new_macro(*arg, **kwds):
+    return library.new_macro(*arg, **kwds)
 
 
 def get_macro(name):

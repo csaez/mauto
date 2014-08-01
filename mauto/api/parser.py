@@ -49,7 +49,7 @@ def parse(log):
     # parsing
     for sloc in log.split("\n"):
         if sloc.startswith("//"):  # comments
-            if "// Result: " not in sloc:
+            if "// Result: " not in sloc or macro[-1][0] == "parent":
                 continue
             # command filtering, regex seemed overkill
             out = sloc.replace("// Result: ", "")[:-2]

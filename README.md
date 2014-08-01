@@ -11,7 +11,7 @@ line of code.
 ## Dependencies
 
 - [PySide](http://qt-project.org/wiki/PySide)
-- [Nose](https://nose.readthedocs.org/en/latest/) (testing)
+- [Nose](http://nose.readthedocs.org) + [Mock](http://mock.readthedocs.org) (testing)
 
 > `mauto` has been tested on Maya 2014+ but it should run in older
 versions, please let me know if you find any issues.
