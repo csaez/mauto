@@ -55,7 +55,6 @@ through its `setup.py` script (_highly recommended!_).
 
     # create a new macro from a log str
     m = mauto.new_macro("my_macro", log)
-    mauto.save_macro("my_macro")
 
 
     # ===================
