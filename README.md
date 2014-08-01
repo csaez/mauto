@@ -34,15 +34,10 @@ through its `setup.py` script (_highly recommended!_).
 
     # ... or use it through the python api.
 
-    # create a new macro
-    m = mauto.new_macro("my_macro")
-    m.record()
-    m.stop()
-
     # list existing macros
     mauto.list_macros()
 
-    # load a macro from the library
+    # load and execute a macro from the library
     m = mauto.get_macro("my_macro")
     m.play()
     
@@ -52,10 +47,27 @@ through its `setup.py` script (_highly recommended!_).
     refs["locator1"] = "pCube"
     m.play(refs)
 
+    # create a new macro
+    m = mauto.new_macro("my_macro")
+    m.record()
+    m.stop()
+    mauto.save_macro("my_macro")
 
-Running the tests:
+    # create a new macro from a log str
+    m = mauto.new_macro("my_macro", log)
+    mauto.save_macro("my_macro")
 
-    mayapy setup.py nosetests
+
+    # ===================
+    # TESTING (optional)
+    # ===================
+
+    # running the test suite
+    mayapy setup.py nosetests -v
+
+    # running tests with coverage
+    mayapy setup.py nosetests --with-coverage --cover-package=mauto
+
 
 
 ## Contributing
