@@ -1,3 +1,4 @@
+import os
 import mock
 import mauto
 from nose import with_setup
@@ -103,3 +104,29 @@ def test_play():
         # test
         m = mauto.get_macro("testsuite")
         assert m.play() == True
+
+
+def setup_logfile():
+    setup_empty()
+    # setup
+    m = mauto.get_macro("testsuite")
+    filepath = m.filepath.replace("testsuite.json", "temp.txt")
+    with open(filepath, "w") as fp:
+        fp.write("select -r locator1 ;")
+
+
+def teardown_logfile():
+    m = mauto.get_macro("testsuite")
+    filepath = m.filepath.replace("testsuite.json", "temp.txt")
+    os.remove(filepath)
+    teardown()
+
+
+@with_setup(setup_logfile, teardown_logfile)
+def test_stop():
+    m = mauto.get_macro("testsuite")
+    filepath = m.filepath.replace("testsuite.json", "temp.txt")
+    with mock.patch("mauto.api.macro.mc", create=True) as mc:
+        mc.scriptEditorInfo.return_value = filepath
+        m.stop()
+        assert m.actions == [('select', ['locator1'], {'r': 1}, [])]

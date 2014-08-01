@@ -143,10 +143,13 @@ class Macro(object):
         self.pause()
         # retrieve log
         _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
-        with open(_tempfile, "w") as fp:
+        with open(_tempfile) as fp:
             log = fp.read()
-            fp.write("")  # clear temp file
-        self.actions = parser.parse(log)  # parse log
+        # parse log
+        self.actions = parser.parse(log)
+        # clear temp file
+        with open(_tempfile, "w") as fp:
+            fp.write("")
 
     def pause(self):
         """

@@ -42,3 +42,7 @@ def get_macro(name):
 def remove_macro(name):
     if library.get(name):
         library.remove_macro(name)
+
+
+def save_macro(name):
+    return library.save_macro(name)

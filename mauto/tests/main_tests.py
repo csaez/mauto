@@ -33,3 +33,8 @@ def test_get_macro():
 @with_setup(setup, teardown)
 def test_remove_macro():
     mauto.remove_macro("testsuite")
+
+
+@with_setup(setup, teardown)
+def test_save_macro():
+    assert mauto.save_macro("testsuite")
