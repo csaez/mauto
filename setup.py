@@ -12,7 +12,7 @@ config = {
     'url': 'https://www.github.com/csaez/mauto',
     'packages': find_packages(exclude=['ez_setup', 'tests']),
     'package_data': {'mauto.gui': ['images/*.*']},
-    'tests_require': ['nose', 'mock'],
+    'tests_require': ['nose', 'coverage', 'mock'],
     'scripts': []
 }
 
