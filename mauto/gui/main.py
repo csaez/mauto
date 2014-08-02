@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'W:\dev\mauto\mauto\gui\designer.ui'
+# Form implementation generated from reading ui file 'main.ui'
 #
-# Created: Fri Aug 01 23:35:31 2014
+# Created: Sat Aug 02 18:24:36 2014
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,15 +26,8 @@ class Ui_MainWindow(object):
         self.filter = QtGui.QLineEdit(self.centralwidget)
         self.filter.setObjectName("filter")
         self.verticalLayout_2.addWidget(self.filter)
-        self.rec_group = QtGui.QFrame(self.centralwidget)
-        self.rec_group.setObjectName("rec_group")
-        self.rec_layout = QtGui.QHBoxLayout(self.rec_group)
-        self.rec_layout.setContentsMargins(0, 0, 0, 0)
-        self.rec_layout.setObjectName("rec_layout")
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.rec_layout.addItem(spacerItem)
-        self.button = QtGui.QPushButton(self.rec_group)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.button = QtGui.QPushButton(self.centralwidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.button.sizePolicy().hasHeightForWidth())
@@ -46,9 +39,12 @@ class Ui_MainWindow(object):
         self.button.setChecked(False)
         self.button.setFlat(True)
         self.button.setObjectName("button")
-        self.rec_layout.addWidget(self.button)
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.rec_layout.addItem(spacerItem1)
+        self.verticalLayout_2.addWidget(self.button)
+        self.rec_group = QtGui.QFrame(self.centralwidget)
+        self.rec_group.setObjectName("rec_group")
+        self.rec_layout = QtGui.QHBoxLayout(self.rec_group)
+        self.rec_layout.setContentsMargins(0, 0, 0, 0)
+        self.rec_layout.setObjectName("rec_layout")
         self.verticalLayout_2.addWidget(self.rec_group)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
@@ -95,7 +91,6 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.list, self.filter)
-        MainWindow.setTabOrder(self.filter, self.button)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "mauto", None, QtGui.QApplication.UnicodeUTF8))
@@ -111,5 +106,5 @@ class Ui_MainWindow(object):
         self.actionRemove.setText(QtGui.QApplication.translate("MainWindow", "Remove", None, QtGui.QApplication.UnicodeUTF8))
         self.actionShowLibrary.setText(QtGui.QApplication.translate("MainWindow", "Show Library", None, QtGui.QApplication.UnicodeUTF8))
         self.actionShowRecorder.setText(QtGui.QApplication.translate("MainWindow", "Show Recorder", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSave.setText(QtGui.QApplication.translate("MainWindow", "Save...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setText(QtGui.QApplication.translate("MainWindow", "Save as...", None, QtGui.QApplication.UnicodeUTF8))
 
