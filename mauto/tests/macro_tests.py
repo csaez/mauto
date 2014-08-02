@@ -4,6 +4,7 @@ from nose import with_setup
 from ..api import macro
 from ..api.lib import library
 
+
 def setup_empty():
     library.new_macro("testsuite")
 
@@ -69,22 +70,6 @@ def test_record():
         assert m.recording == True
 
 
-@with_setup(setup_empty, teardown)
-def test_pause1():
-    with mock.patch("mauto.api.macro.mc", create=True):
-        m = library.get("testsuite")
-        m.record()
-        m.pause()
-        assert m.recording == False
-
-
-@with_setup(setup_empty, teardown)
-def test_pause2():
-    m = library.get("testsuite")
-    m.pause()
-    assert m.recording == False
-
-
 @with_setup(setup_fromlog, teardown)
 def test_fromlog():
     assert library.get("testsuite") is not None
@@ -129,5 +114,25 @@ def test_stop():
     filepath = m.filepath.replace("testsuite.json", "temp.txt")
     with mock.patch("mauto.api.macro.mc", create=True) as mc:
         mc.scriptEditorInfo.return_value = filepath
+        m.record()
         m.stop()
         assert m.actions == [('select', ['locator1'], {'r': 1}, [])]
+
+
+@with_setup(setup_logfile, teardown_logfile)
+def test_pause1():
+    m = library.get("testsuite")
+    filepath = m.filepath.replace("testsuite.json", "temp.txt")
+    with mock.patch("mauto.api.macro.mc", create=True) as mc:
+        mc.scriptEditorInfo.return_value = filepath
+        m = library.get("testsuite")
+        m.record()
+        m.pause()
+        assert m.recording == False
+
+
+@with_setup(setup_empty, teardown)
+def test_pause2():
+    m = library.get("testsuite")
+    m.pause()
+    assert m.recording == False

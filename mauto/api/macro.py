@@ -138,27 +138,24 @@ class Macro(object):
 
     def stop(self):
         """
-        Stops recording and parse the internal log.
+        Same as self.pause().
         """
         self.pause()
-        # retrieve log
-        _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
-        with open(_tempfile) as fp:
-            log = fp.read()
-        # parse log
-        self.actions = parser.parse(log)
-        # clear temp file
-        with open(_tempfile, "w") as fp:
-            fp.write("")
 
     def pause(self):
         """
-        Pauses the recording, unlike stop() this method and can be resumed
-        calling play().
+        Pauses the recording.
         """
-        if self.recording:
-            mc.scriptEditorInfo(writeHistory=False)
-            self._recording = False
+        if not self.recording:
+            return
+        mc.scriptEditorInfo(writeHistory=False)
+        _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
+        with open(_tempfile) as fp:
+            log = fp.read()  # retrieve log
+        self.actions.extend(parser.parse(log))  # parse log
+        with open(_tempfile, "w") as fp:
+            fp.write("")  # clear temp file
+        self._recording = False
 
     def serialize(self):
         """Returns a dict with macro's data."""
@@ -171,9 +168,6 @@ class Macro(object):
     def deserialize(self, data):
         """Fills up the macro using the incoming data dict."""
         if self.is_valid(data):
-            self.name = data.get("name")
-            self.actions = data.get("actions")
-            self.filetype = data.get("filetype")
-            self.version = data.get("version")
-            self.filepath = data.get("filepath")
+            for k, v in data.iteritems():
+                setattr(self, k, v)
         return self.is_valid(data)
