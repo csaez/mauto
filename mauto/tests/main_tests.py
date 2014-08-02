@@ -10,10 +10,6 @@ def teardown():
     mauto.remove_macro("testsuite")
 
 
-def test_show():
-    assert mauto.show() == True
-
-
 @with_setup(setup, teardown)
 def test_list_macros():
     return len(mauto.list_macros()) >= 1

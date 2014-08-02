@@ -165,7 +165,8 @@ class Macro(object):
         return {"name": self.name,
                 "actions": self.actions,
                 "filetype": "mauto_macro",
-                "version": 0.1}
+                "version": 0.1,
+                "filepath": self.filepath}
 
     def deserialize(self, data):
         """Fills up the macro using the incoming data dict."""
@@ -174,4 +175,5 @@ class Macro(object):
             self.actions = data.get("actions")
             self.filetype = data.get("filetype")
             self.version = data.get("version")
+            self.filepath = data.get("filepath")
         return self.is_valid(data)

@@ -20,11 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .api import library
+from mauto.api import library
+try:
+    from mauto.gui import Layout, get_parent
+except ImportError:
+    pass
 
 
 def show():
-    return True
+    app = Layout(parent=get_parent())
+    app.show()
 
 
 def list_macros():

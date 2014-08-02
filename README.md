@@ -1,17 +1,21 @@
 mauto - as in Maya Automation
 =============================
-`mauto` is a generic macro tool for Autodesk Maya.
+`mauto` is a generic macro tool for Autodesk Maya, it implements a simple
+(but efficient) static analysis algorithm which solves the external and
+internal dependencies at runtime,  giving you the ability to automate
+repetitive tasks without write a single line of code.
 
-`mauto` implements a simple (but efficient) static analysis algorithm
-which solves the external and internal dependencies at runtime, 
-giving you te ability to automate repetitive tasks without write a single
-line of code.
+Does `mauto` remove the need of scripting?
+
+__Not at all!__ `mauto` helps to automate _simple tasks_ through macros, but
+it does not contemplate any kind of control flow (if _this_ then _that_) or
+the ability to access low-level stuff through the Maya API.
 
 
 ## Dependencies
 
 - [PySide](http://qt-project.org/wiki/PySide)
-- [Nose](http://nose.readthedocs.org) + [coverage](http://coverage.readthedocs.org/en/latest/) + [Mock](http://mock.readthedocs.org) (testing)
+- [Nose](http://nose.readthedocs.org) + [Coverage](http://coverage.readthedocs.org) + [Mock](http://mock.readthedocs.org) (testing)
 
 > `mauto` has been tested on Maya 2014+ but it should run in older
 versions, please let me know if you find any issues.
@@ -25,6 +29,7 @@ through its `setup.py` script (_highly recommended!_).
 
     mayapy setup.py install
 
+
 ## Ussage
 
     import mauto
@@ -34,6 +39,15 @@ through its `setup.py` script (_highly recommended!_).
 
     # ... or use it through the python api.
 
+    # create a new macro
+    m = mauto.new_macro("my_macro")
+    m.record()
+    m.stop()
+    mauto.save_macro("my_macro")
+
+    # create a new macro from a maya log
+    m = mauto.new_macro("my_macro", log)
+    
     # list existing macros
     mauto.list_macros()
 
@@ -47,26 +61,18 @@ through its `setup.py` script (_highly recommended!_).
     refs["locator1"] = "pCube"
     m.play(refs)
 
-    # create a new macro
-    m = mauto.new_macro("my_macro")
-    m.record()
-    m.stop()
-    mauto.save_macro("my_macro")
+    # remove a macro from the library
+    mauto.remove_macro("my_macro")
 
-    # create a new macro from a log str
-    m = mauto.new_macro("my_macro", log)
+#### Testing (optional)
 
+Running the test suite:
 
-    # ===================
-    # TESTING (optional)
-    # ===================
-
-    # running the test suite
     mayapy setup.py nosetests -v
 
-    # running tests with coverage
-    mayapy setup.py nosetests --with-coverage --cover-package=mauto
+Running tests with coverage:
 
+    mayapy setup.py nosetests --with-coverage --cover-package=mauto
 
 
 ## Contributing
@@ -84,4 +90,4 @@ Make sure to add yourself to `CONTRIBUTORS.md`
 
 ## Notes
 
-For more info, refer to the [documentation](http://github.com/csaez/mauto/wiki).
+For more info, refer to the [documentation](http://mauto.readthedocs.org).

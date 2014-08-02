@@ -1,12 +1,11 @@
 import os
 import mock
-import mauto
 from nose import with_setup
 from ..api import macro
-
+from ..api.lib import library
 
 def setup_empty():
-    mauto.new_macro("testsuite")
+    library.new_macro("testsuite")
 
 
 def setup_fromlog():
@@ -33,11 +32,13 @@ move -r -os -wd 0 0 9.927413 ;
 select -tgl ikHandle1 ;
 poleVectorConstraint -weight 1;
 // Result: ikHandle1_poleVectorConstraint1 // """
-    mauto.new_macro("testsuite", log)
+    library.new_macro("testsuite", log)
 
 
 def teardown():
-    mauto.remove_macro("testsuite")
+    n = "testsuite"
+    if library.get(n):
+        library.remove_macro(n)
 
 
 def test_valid():
@@ -50,20 +51,20 @@ def test_valid1():
 
 @with_setup(setup_empty, teardown)
 def test_valid2():
-    d = mauto.get_macro("testsuite").serialize()
+    d = library.get("testsuite").serialize()
     assert macro.Macro.is_valid(d) == True
 
 
 @with_setup(setup_empty, teardown)
 def test_fromfile():
-    d = mauto.get_macro("testsuite").serialize()
+    d = library.get("testsuite").serialize()
     assert macro.Macro.from_data(d) is not None
 
 
 @with_setup(setup_empty, teardown)
 def test_record():
     with mock.patch("mauto.api.macro.mc", create=True):
-        m = mauto.get_macro("testsuite")
+        m = library.get("testsuite")
         m.record()
         assert m.recording == True
 
@@ -71,7 +72,7 @@ def test_record():
 @with_setup(setup_empty, teardown)
 def test_pause1():
     with mock.patch("mauto.api.macro.mc", create=True):
-        m = mauto.get_macro("testsuite")
+        m = library.get("testsuite")
         m.record()
         m.pause()
         assert m.recording == False
@@ -79,19 +80,19 @@ def test_pause1():
 
 @with_setup(setup_empty, teardown)
 def test_pause2():
-    m = mauto.get_macro("testsuite")
+    m = library.get("testsuite")
     m.pause()
     assert m.recording == False
 
 
 @with_setup(setup_fromlog, teardown)
 def test_fromlog():
-    assert mauto.get_macro("testsuite") is not None
+    assert library.get("testsuite") is not None
 
 
 @with_setup(setup_fromlog, teardown)
 def test_inputs():
-    m = mauto.get_macro("testsuite")
+    m = library.get("testsuite")
     assert m.inputs.keys() == ['joint3.rotatePivot', 'joint1', 'locator1']
 
 
@@ -102,21 +103,21 @@ def test_play():
         mc.ikHandle.return_value = ["ikHandle1", "effector1"]
         mc.poleVectorConstraint.return_value = "ikHandle1_poleVectorConstraint1"
         # test
-        m = mauto.get_macro("testsuite")
+        m = library.get("testsuite")
         assert m.play() == True
 
 
 def setup_logfile():
     setup_empty()
     # setup
-    m = mauto.get_macro("testsuite")
+    m = library.get("testsuite")
     filepath = m.filepath.replace("testsuite.json", "temp.txt")
     with open(filepath, "w") as fp:
         fp.write("select -r locator1 ;")
 
 
 def teardown_logfile():
-    m = mauto.get_macro("testsuite")
+    m = library.get("testsuite")
     filepath = m.filepath.replace("testsuite.json", "temp.txt")
     os.remove(filepath)
     teardown()
@@ -124,7 +125,7 @@ def teardown_logfile():
 
 @with_setup(setup_logfile, teardown_logfile)
 def test_stop():
-    m = mauto.get_macro("testsuite")
+    m = library.get("testsuite")
     filepath = m.filepath.replace("testsuite.json", "temp.txt")
     with mock.patch("mauto.api.macro.mc", create=True) as mc:
         mc.scriptEditorInfo.return_value = filepath
