@@ -60,6 +60,13 @@ def test_base3():
     assert p.parse(log) == result
 
 
+def test_base_triling_space():
+    without_space = p.parse("parent;")
+    with_space = p.parse("parent ;")
+    print without_space, with_space
+    assert with_space == without_space == [('parent', [], {}, [])]
+
+
 def test_select3():
     log = 'select -add 0 -tgl 0 locator1 locator2;'
     result = [('select', ['locator1', 'locator2'], {'add': 0, 'tgl': 0}, [])]

@@ -44,12 +44,12 @@ for r in _rules:
 def parse(log):
     macro = list()
     # cleanup
-    log = "\n".join([l.replace(" ;", ";")[:-1] for l in log.split("\n")
+    log = "\n".join([l.replace(";", "") for l in log.split("\n")
                      if not any([x in l.lower() for x in EXCLUDE])])
     # parsing
     for sloc in log.split("\n"):
         if sloc.startswith("//"):  # comments
-            if "// Result: " not in sloc or macro[-1][0] == "parent":
+            if not sloc.startswith("// Result:") or macro[-1][0] == "parent":
                 continue
             # command filtering, regex seemed overkill
             out = sloc.replace("// Result: ", "")[:-2]
@@ -63,7 +63,7 @@ def parse(log):
 
 
 def parse_sloc(sloc):
-    split_space = [x for x in sloc.split(" ") if len(x) and x != ";"]
+    split_space = [x for x in sloc.split(" ") if len(x)]
     cmd_name = split_space[0] if len(split_space) else ""
     default = PARSING_RULES.get("base")
     return PARSING_RULES.get(cmd_name.lower(), default)(sloc)
