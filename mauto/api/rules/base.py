@@ -22,7 +22,8 @@
 
 
 def rule(sloc):  # parsing rule, fallback
-    split_space = [x for x in sloc.split(" ") if len(x) and x != ";"]
+    _chars = (";", "\r")
+    split_space = [x for x in sloc.split(" ") if len(x) and x not in _chars]
     command = split_space[0] if len(split_space) else ""
     args, kwds, out = list(), dict(), list()
     if len(split_space) > 1:

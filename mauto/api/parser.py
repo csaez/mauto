@@ -59,7 +59,7 @@ def parse(log):
             macro[-1] = tuple(previous)
         else:
             _result = parse_sloc(sloc)
-            if len(_result[0]):  # check lenght of command name
+            if _result[0] and len(_result[0]):  # check lenght of command name
                 macro.append(_result)
     return macro
 
