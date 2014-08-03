@@ -58,7 +58,9 @@ def parse(log):
             previous[-1] = [x for x in out.split(" ") if len(x)]
             macro[-1] = tuple(previous)
         else:
-            macro.append(parse_sloc(sloc))
+            _result = parse_sloc(sloc)
+            if len(_result[0]):  # check lenght of command name
+                macro.append(_result)
     return macro
 
 
