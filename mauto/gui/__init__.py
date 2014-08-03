@@ -162,6 +162,14 @@ class Inputs(QtGui.QDialog):
         # signals
         self.ui.name.textChanged.connect(self.validate_name)
         self.validate_name(self.ui.name.text())
+        # fill inputs
+        self.ui.inputs.setRowCount(len(self.macro.inputs))
+        self.ui.inputs.setColumnCount(2)  # key, value
+        for row, items in enumerate(self.macro.inputs.iteritems()):
+            for column, value in enumerate(items):
+                item = QtGui.QTableWidgetItem()
+                item.setText(str(value))
+                self.ui.inputs.setItem(row, column, item)
 
     @classmethod
     def play(cls, macro, *args, **kwds):
@@ -171,6 +179,7 @@ class Inputs(QtGui.QDialog):
         result = d.exec_()
         if result:
             macro.play(d.refs)
+        del d
         return result
 
     @classmethod
@@ -181,14 +190,16 @@ class Inputs(QtGui.QDialog):
         result = d.exec_()
         if result:
             name = d.ui.name.text()
+            print macro.actions
             m = library.new_macro(name)
             m.deserialize(macro.serialize())
+            m.filepath = None
             library.save_macro(name)
         del d  # release macro instance
         return result
 
     def validate_name(self, text):
-        stylesheet = "border: 2px solid; border-color: rgb(255, 0, 0);"
+        stylesheet = "border: 1px solid; border-color: rgb(255, 0, 0);"
         is_valid = library.get(text) is None and len(text)
         self.ui.name.setStyleSheet("" if is_valid else stylesheet)
         return is_valid
