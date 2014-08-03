@@ -55,13 +55,13 @@ class Lib(dict):
             return None
         m = Macro(name) if not log else Macro.from_log(name, log)
         self.__setitem__(name, m)
-        _filename = filename if filename else name + ".json"
-        m.filepath = os.path.join(self.repo, _filename)
-        self.save_macro(name)
+        self.save_macro(name, filename)
         return self.get(name)
 
-    def save_macro(self, name):
+    def save_macro(self, name, filename=None):
         m = self.__getitem__(name)
+        _filename = filename if filename else name + ".json"
+        m.filepath = os.path.join(self.repo, _filename)
         with open(m.filepath, "w") as fp:
             json.dump(m.serialize(), fp)
         return os.path.exists(m.filepath)
