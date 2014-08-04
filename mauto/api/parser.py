@@ -23,10 +23,15 @@
 import re
 
 REGEX = {
+    # command -flag value REFERENCE;
     "general": r'-[a-zA-Z]+\s[a-zA-Z0-9]*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;',
+    # command "REFERENCE.attr" value;
     "attr": r'.*\s\"([a-zA-Z][a-zA-Z0-9]*).*;',
+    # select -flag value REFERENCE(s);
     "select": r'select\s\-\w*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;'
-}  # <---- add extre regex here!
+}  # <---- add extra regex here!
+
+OUTPUT = r'//\s([a-zA-Z0-9\s]*)\s//'  # // REFERENCE(s) //
 
 
 def parse(MEL):
@@ -36,7 +41,7 @@ def parse(MEL):
             continue
         if sloc.startswith("//"):
             if i and not actions[-1]["sloc"].startswith("parent"):
-                for x in re.compile(r'//\s([a-zA-Z0-9\s]*)\s//').findall(sloc):
+                for x in re.compile(OUTPUT).findall(sloc):
                     actions[-1]["out"] = str_to_list(x)
         else:
             actions.append({"sloc": sloc, "out": list()})
