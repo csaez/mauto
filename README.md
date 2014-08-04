@@ -1,15 +1,15 @@
 mauto - as in Maya Automation
 =============================
-`mauto` is a generic macro tool for Autodesk Maya, it implements a simple
+`mauto` is a macro tool for Autodesk Maya, it implements a simple
 (but efficient) static analysis algorithm which solves the external and
-internal dependencies at runtime,  giving you the ability to automate
-repetitive tasks without write a single line of code.
+internal dependencies of the Maya log at runtime, giving the ability to
+automate _simple tasks_ without write a single line of code.
 
-Does `mauto` remove the need of scripting?
+Does `mauto` replace scripting?
 
-__Not at all!__ `mauto` helps to automate _simple tasks_ through macros, but
-it does not contemplate any kind of control flow (if _this_ then _that_) or
-the ability to access low-level stuff through the Maya API.
+__Not at all!__ `mauto` __helps__ to automate simple tasks, but it does not
+offer any kind of control flow ability (if _this_ then _that_) or access
+to low-level stuff (Maya API).
 
 
 ## Dependencies
@@ -17,7 +17,7 @@ the ability to access low-level stuff through the Maya API.
 - [PySide](http://qt-project.org/wiki/PySide)
 - [Nose](http://nose.readthedocs.org) + [Coverage](http://coverage.readthedocs.org) + [Mock](http://mock.readthedocs.org) (testing)
 
-> `mauto` has been tested on Maya 2014+ but it should run in older
+> `mauto` has been tested on Maya >= 2014 but it should run in older
 versions, please let me know if you find any issues.
 
 
@@ -25,7 +25,7 @@ versions, please let me know if you find any issues.
 
 Copy the `mauto` directory somewhere in your `PYTHONPATH` (maya scripts
 directory should do the trick) or clone the repo and install the project
-through its `setup.py` script (_highly recommended!_).
+through its `setup.py` script (__highly recommended!__).
 
     mayapy setup.py install
 
