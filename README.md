@@ -7,9 +7,9 @@ automate _simple tasks_ without write a single line of code.
 
 Does `mauto` replace scripting?
 
-__Not at all!__ `mauto` __helps__ to automate simple tasks, but it does not
-offer any kind of control flow ability (if _this_ then _that_) or access
-to low-level stuff (Maya API).
+_Not at all!_ `mauto` helps to automate repetitive tasks through, but it
+does not offer any kind of control flow ability (if _this_ then _that_)
+or access to low-level stuff (Maya API).
 
 
 ## Dependencies
@@ -25,7 +25,7 @@ versions, please let me know if you find any issues.
 
 Copy the `mauto` directory somewhere in your `PYTHONPATH` (maya scripts
 directory should do the trick) or clone the repo and install the project
-through its `setup.py` script (__highly recommended!__).
+through its `setup.py` script (_highly recommended!_).
 
     mayapy setup.py install
 
