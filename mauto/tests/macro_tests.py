@@ -13,11 +13,11 @@ def setup_fromlog():
     log = """select -r joint1.rotatePivot ;
 select -add joint3.rotatePivot ;
 ikHandle -sol ikRPsolver ;
-// Result: ikHandle1 effector1 //
+// ikHandle1 effector1 //
 select -r locator1 ;
 select -add joint1 ;
 parent;
-// Result: locator1 //
+// locator1 //
 setAttr "locator1.rotateZ" 0;
 setAttr "locator1.translateX" 0;
 setAttr "locator1.translateY" 0;
@@ -26,13 +26,11 @@ setAttr "locator1.rotateX" 0;
 setAttr "locator1.rotateY" 0;
 select -r locator1 ;
 parent -w;
-// Result: locator1 //
-TranslateToolWithSnapMarkingMenu;
-MarkingMenuPopDown;
+// locator1 //
 move -r -os -wd 0 0 9.927413 ;
 select -tgl ikHandle1 ;
 poleVectorConstraint -weight 1;
-// Result: ikHandle1_poleVectorConstraint1 // """
+// ikHandle1_poleVectorConstraint1 //"""
     library.new_macro("testsuite", log)
 
 
@@ -78,7 +76,7 @@ def test_fromlog():
 @with_setup(setup_fromlog, teardown)
 def test_inputs():
     m = library.get("testsuite")
-    assert m.inputs.keys() == ['joint3.rotatePivot', 'joint1', 'locator1']
+    assert m.inputs.keys() == ['joint3', 'joint1', 'locator1']
 
 
 @with_setup(setup_fromlog, teardown)
@@ -87,9 +85,14 @@ def test_play():
         # mock all the things!
         mc.ikHandle.return_value = ["ikHandle1", "effector1"]
         mc.poleVectorConstraint.return_value = "ikHandle1_poleVectorConstraint1"
-        # test
-        m = library.get("testsuite")
-        assert m.play() == True
+        with mock.patch("mauto.api.macro.mel", create=True) as mel:
+            return_values = {
+                "ikHandle -sol ikRPsolver ;": ("ikHandle1", "effector1"),
+                "poleVectorConstraint -weight 1;": "ikHandle1_poleVectorConstraint1"}
+            mel.eval.side_effect = lambda x: return_values.get(x)
+            # test
+            m = library.get("testsuite")
+            assert m.play() == True
 
 
 def setup_logfile():
@@ -116,7 +119,8 @@ def test_stop():
         mc.scriptEditorInfo.return_value = filepath
         m.record()
         m.stop()
-        assert m.actions == [('select', ['locator1'], {'r': 1}, [])]
+        assert m.actions == [{'sloc': 'select -r locator1 ;',
+                              'out': [], }]
 
 
 @with_setup(setup_logfile, teardown_logfile)

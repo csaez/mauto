@@ -24,9 +24,9 @@ from . import parser
 
 try:
     from maya import cmds as mc
-except ImportError, err:
-    print "ImportError:", __file__
-    print err
+    from maya import mel
+except ImportError:
+    pass
 
 
 class Macro(object):
@@ -52,14 +52,9 @@ class Macro(object):
 
     @classmethod
     def from_log(cls, name, log):
-        """
-        Create a new macro from a log str.
-        """
-        data = {"name": name,
-                "actions": parser.parse(log),
-                "filetype": "mauto_macro",
-                "version": 0.1}
-        return cls.from_data(data)
+        m = cls(name)
+        m.actions.extend(parser.parse(log))
+        return m
 
     @staticmethod
     def is_valid(data):
@@ -90,17 +85,11 @@ class Macro(object):
 
     def _template(self):
         t = dict()
-        for command, args, kwds, outputs in self.actions:
-            for o in outputs:
-                t[o] = -1  # set unitialized
-            if command:
-                for a in args:
-                    if isinstance(a, basestring):
-                        t[a] = t.get(a)
-        for k, v in t.iteritems():
-            for key in t.keys():
-                if key + "." in k and key != k:
-                    t[k] = lambda x=key, y=k.replace(key, ""): str(t[x]) + y
+        for a in self.actions:
+            for o in a["out"]:
+                t[o] = -1  # set un-initiated
+            for ref in parser.get_deps(a["sloc"]):
+                t[ref] = t.get(ref)
         return t
 
     def record(self):
@@ -117,22 +106,25 @@ class Macro(object):
         ones on the incoming dict. Otherwise it look for the same references
         as the ones used when the macro was recorded."""
         # default value
-        if not inputs:
-            inputs = dict([(k, lambda _=k: _) for k in self.inputs.keys()])
+        if inputs is None:
+            inputs = dict([(k, k) for k in self.inputs.keys()])
         # merge input with internal refs
         ref = self._template()
         ref.update(inputs)
         # run
         mc.undoInfo(openChunk=True)  # start grouping undo
-        for command, args, kwds, outputs in self.actions:
-            if command:
-                # solve runtime args
-                args = [ref[a]() for a in args if ref.get(a)]
-                # run command
-                r = getattr(mc, command)(*args, **kwds)
-                # update outputs
-                for i, o in enumerate(outputs):
-                    ref[o] = lambda x=r[i]: x
+        for a in self.actions:
+            code = a["sloc"]
+            for k, v in ref.iteritems():
+                if k in code and k != v:
+                    code = code.replace(k, v)
+            out = mel.eval(code)
+            if isinstance(out, (list, tuple)):
+                for i, x in enumerate(out):
+                    ref[a["out"][i]] = x
+            else:
+                if a.get("out"):
+                    ref[a["out"]] = out
         mc.undoInfo(closeChunk=True)  # end grouping undo
         return True
 
@@ -151,10 +143,10 @@ class Macro(object):
         mc.scriptEditorInfo(writeHistory=False)
         _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
         with open(_tempfile) as fp:
-            log = fp.read()  # retrieve log
+            log = fp.read()
         self.actions.extend(parser.parse(log))  # parse log
-        with open(_tempfile, "w") as fp:
-            fp.write("")  # clear temp file
+        with open(_tempfile, "w") as fp:  # clear temp file
+            fp.write("")
         self._recording = False
 
     def serialize(self):

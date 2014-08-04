@@ -20,52 +20,52 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-import importlib
+import re
 
-EXCLUDE = ("marking", "mode")
-
-_NULL = lambda x: (None, list(), dict(), list())
-PARSING_RULES = {"createlocator": _NULL,
-                 }  # <- map specific rules here
-
-# fill PARSING_RULES with ./rules/*.py
-_rp = os.path.join(os.path.dirname(__file__), "rules")
-_rules = list()
-for n in os.listdir(_rp):
-    fn = os.path.join(_rp, n)
-    if os.path.isfile(fn) and "__init__" not in n:
-        _rules.append(n.split(".")[0])
-for r in _rules:
-    m = importlib.import_module("mauto.api.rules.%s" % r)
-    PARSING_RULES[r] = getattr(m, "rule")
+REGEX = {
+    "general": r'-[a-zA-Z]+\s[a-zA-Z0-9]*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;',
+    "attr": r'.*\s\"([a-zA-Z][a-zA-Z0-9]*).*;',
+    "select": r'select\s\-\w*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;'
+}  # <---- add extre regex here!
 
 
-def parse(log):
-    macro = list()
-    # cleanup
-    log = "\n".join([l.replace(";", "") for l in log.split("\n")
-                     if not any([x in l.lower() for x in EXCLUDE])])
-    # parsing
-    for sloc in log.split("\n"):
-        if sloc.startswith("//"):  # comments
-            if not sloc.startswith("// Result:") or macro[-1][0] == "parent":
-                continue
-            # command filtering, regex seemed overkill
-            out = sloc.replace("// Result: ", "")[:-2]
-            # set as the output of the previous command
-            previous = list(macro[-1])
-            previous[-1] = [x for x in out.split(" ") if len(x)]
-            macro[-1] = tuple(previous)
+def parse(MEL):
+    actions = list()
+    for i, sloc in enumerate(MEL.split("\n")):
+        if not len(sloc) or sloc[0].isupper():
+            continue
+        if sloc.startswith("//"):
+            if i and not actions[-1]["sloc"].startswith("parent"):
+                for x in re.compile(r'//\s([a-zA-Z0-9\s]*)\s//').findall(sloc):
+                    actions[-1]["out"] = str_to_list(x)
         else:
-            _result = parse_sloc(sloc)
-            if _result[0] and len(_result[0]):  # check lenght of command name
-                macro.append(_result)
-    return macro
+            actions.append({"sloc": sloc, "out": list()})
+    return actions
 
 
-def parse_sloc(sloc):
-    split_space = [x for x in sloc.split(" ") if len(x)]
-    cmd_name = split_space[0] if len(split_space) else ""
-    default = PARSING_RULES.get("base")
-    return PARSING_RULES.get(cmd_name.lower(), default)(sloc)
+def get_deps(MEL):
+    deps = set()
+    for expr in REGEX.values():
+        for x in re.compile(expr).findall(MEL):
+            deps = deps.union(set(str_to_list(x)))
+    return list(deps)
+
+
+def str_to_list(text):
+    result = list()
+    _split = [_ for _ in text.split(" ") if len(_)]
+    if len(_split) > 1:
+        result.extend(_split)
+    else:
+        result.append(text)
+    # cleanup
+    result = list(set(result))
+    for i, x in enumerate(result):
+        while x.startswith(" "):
+            x = x[1:]
+        while x.endswith(" "):
+            x = x[:-1]
+        if "." in x:
+            x = x.split(".")[0]
+        result[i] = x
+    return result
