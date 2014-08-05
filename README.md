@@ -8,7 +8,7 @@ automate _simple tasks_ without write a single line of code.
 Does `mauto` replace scripting?
 
 _Not at all!_ `mauto` helps to automate repetitive tasks through macros,
-but it does not offer any kind of control flow ability (if _this_ then _that_)
+but it does not offer any kind of control flow tooling (if _this_ then _that_)
 or access to low-level stuff (Maya API).
 
 
