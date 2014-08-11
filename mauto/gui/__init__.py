@@ -39,6 +39,10 @@ class Layout(QtGui.QMainWindow):
         self.ui.filter.returnPressed.connect(self.filter_entered)
         self.ui.action.clicked.connect(self.action_clicked)
         self.ui.macros.itemSelectionChanged.connect(self.macros_changed)
+        self.ui.macros.itemClicked.connect(self.macros_changed)
+        self.ui.macros.itemDoubleClicked.connect(self.play)
+        QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Delete), self, self.remove_macro)
         # init ui
         try:
             _version = pkg_resources.get_distribution("mauto").version
@@ -70,12 +74,10 @@ class Layout(QtGui.QMainWindow):
             self.ui.macros.setItem(i, 0, item)
 
     def list_inputs(self):
-        curr_item = self.ui.macros.currentItem()
-        curr_macro = library.get(curr_item.text()) if curr_item else None
-        if not curr_macro:
+        if not self.curr_macro:
             return
-        self.ui.inputs.setRowCount(len(curr_macro.inputs))
-        for row, items in enumerate(curr_macro.inputs.iteritems()):
+        self.ui.inputs.setRowCount(len(self.curr_macro.inputs))
+        for row, items in enumerate(self.curr_macro.inputs.iteritems()):
             for column, value in enumerate(items):
                 item = QtGui.QTableWidgetItem()
                 item.setText(value)
@@ -84,14 +86,12 @@ class Layout(QtGui.QMainWindow):
                 self.ui.inputs.setItem(row, column, item)
 
     def filter_changed(self, text):
-        _match = False
+        match = False
         for i in range(self.ui.macros.rowCount()):
             item = self.ui.macros.item(i, 0)
-            if item:
-                if text == item.text():
-                    _match = True
-                self.ui.macros.setRowHidden(i, text not in item.text())
-        self.state = 2 if _match else 0
+            match = True if text == item.text() else match
+            self.ui.macros.setRowHidden(i, text not in item.text())
+        self.state = 2 if match else 0
 
     def filter_entered(self):
         name = self.ui.filter.text()
@@ -105,31 +105,36 @@ class Layout(QtGui.QMainWindow):
         self.action_clicked()
 
     def macros_changed(self):
-        _item = self.ui.macros.currentItem()
-        m = library.get(_item.text())
-        if not m:
+        if not self.curr_macro:
             return
         self.list_inputs()
         self.state = 2
 
     def remove_macro(self):
-        item = self.ui.macros.currentItem()
-        if not item:
+        if not self.curr_macro:
             return
+        n = self.curr_macro.name
         for i in range(self.ui.macros.rowCount()):
             curr_item = self.ui.macros.item(i, 0)
-            if curr_item.text() == item.text():
+            if curr_item and curr_item.text() == n:
                 self.ui.macros.removeRow(i)
-                library.remove_macro(item.text())
+                library.remove_macro(n)
+                self.list_inputs()
 
     def action_clicked(self):
         if len(self.ui.filter.text()):
             (self.record, self.stop, self.play)[self.state]()
+            return
+        # fallback
+        if self.curr_macro:
+            self.play()
 
     def stop(self):
         self.state = 2
-        m = library.get(self.ui.filter.text())
-        m.pause()
+        self.list_inputs()
+        if self.curr_macro:
+            self.curr_macro.pause()
+            library.save_macro(self.curr_macro.name)
 
     def record(self):
         name = self.ui.filter.text()
@@ -147,7 +152,21 @@ class Layout(QtGui.QMainWindow):
         m.record()
 
     def play(self):
-        pass
+        if not self.curr_macro:
+            return
+        d = dict()
+        for i in range(self.ui.inputs.rowCount()):
+            k = self.ui.inputs.item(i, 0).text()
+            v = self.ui.inputs.item(i, 1).text()
+            if not len(v):
+                v = k
+            d[k] = v
+        self.curr_macro.play(d)
+
+    @property
+    def curr_macro(self):
+        curr_item = self.ui.macros.currentItem()
+        return library.get(curr_item.text()) if curr_item else None
 
 
 def get_parent():
