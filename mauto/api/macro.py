@@ -38,7 +38,7 @@ class Macro(object):
 
         self.filepath = None
         self._tempfile = "mauto_tempHistoryLog.txt"
-        self._recording = False
+        self.recording = False
 
     @classmethod
     def from_data(cls, data):
@@ -76,13 +76,6 @@ class Macro(object):
         """
         return dict([(k, v) for k, v in self._template().iteritems() if v is None])
 
-    @property
-    def recording(self):
-        """
-        Returns a bool indicating wether the macro is recording or not.
-        """
-        return self._recording
-
     def _template(self):
         t = dict()
         for a in self.actions:
@@ -97,7 +90,7 @@ class Macro(object):
         Start recording a log with the actions done in the Maya GUI.
         """
         mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
-        self._recording = True
+        self.recording = True
 
     def play(self, inputs=None):
         """
@@ -147,7 +140,7 @@ class Macro(object):
         self.actions.extend(parser.parse(log))  # parse log
         with open(_tempfile, "w") as fp:  # clear temp file
             fp.write("")
-        self._recording = False
+        self.recording = False
 
     def serialize(self):
         """Returns a dict with macro's data."""
