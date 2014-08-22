@@ -76,7 +76,7 @@ def test_fromlog():
 @with_setup(setup_fromlog, teardown)
 def test_inputs():
     m = library.get("testsuite")
-    assert m.inputs.keys() == ['joint3', 'joint1', 'locator1']
+    assert m.inputs == ['joint3', 'joint1', 'locator1']
 
 
 @with_setup(setup_fromlog, teardown)
