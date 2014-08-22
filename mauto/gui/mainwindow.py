@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Tue Aug 05 00:06:02 2014
+# Created: Fri Aug 22 01:21:16 2014
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -78,6 +78,7 @@ class Ui_MainWindow(object):
         self.inputs.verticalHeader().setVisible(False)
         self.verticalLayout.addWidget(self.inputs)
         self.action = QtGui.QPushButton(self.properties)
+        self.action.setEnabled(False)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)

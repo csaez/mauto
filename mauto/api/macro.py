@@ -70,11 +70,20 @@ class Macro(object):
     @property
     def inputs(self):
         """
-        Returns a dict of the macro's external references.
-        This dict is usually used as a template for the custom inputs
-        passed to play().
+        Returns a list of external references.
         """
-        return dict([(k, v) for k, v in self._template().iteritems() if v is None])
+        if not hasattr(self, "_inputs"):
+            self._inputs = [k for k, v in self._template().iteritems()
+                            if v is None]
+        return self._inputs
+
+    @inputs.setter
+    def inputs(self, value):
+        lenght = len(value)
+        if lenght == len(self.inputs):
+            self._inputs = value
+        else:
+            print "ERROR: Make sure the input list has %d items." % lenght
 
     def _template(self):
         t = dict()
@@ -92,18 +101,19 @@ class Macro(object):
         mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
         self.recording = True
 
-    def play(self, inputs=None):
+    def play(self, **options):
         """
         Run the macro.
-        If inputs is passed, it replaces the external references by the
-        ones on the incoming dict. Otherwise it look for the same references
-        as the ones used when the macro was recorded."""
+        If options are passed, external references will be replaced by the
+        ones on the incoming dict/kwds. Otherwise it look for the same
+        references used when the macro was recorded as a fallback."""
         # default value
-        if inputs is None:
-            inputs = dict([(k, k) for k in self.inputs.keys()])
+        _inputs = dict()
+        for x in self.inputs:
+            _inputs[x] = options.get(x, x)
         # merge input with internal refs
         ref = self._template()
-        ref.update(inputs)
+        ref.update(_inputs)
         # run
         mc.undoInfo(openChunk=True)  # start grouping undo
         for a in self.actions:
@@ -146,6 +156,7 @@ class Macro(object):
         """Returns a dict with macro's data."""
         return {"name": self.name,
                 "actions": self.actions,
+                "inputs": self.inputs,
                 "filetype": "mauto_macro",
                 "version": 0.1,
                 "filepath": self.filepath}

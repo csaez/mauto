@@ -33,7 +33,11 @@ class Layout(QtGui.QMainWindow):
                            for k, v in self.IMAGES.iteritems()])
         self.ICONS = dict([(k, QtGui.QIcon(v))
                           for k, v in self.IMAGES.iteritems()])
-        self._state = 2  # 0: record, 1: stop, 2:play
+        self.ICONS["no_icon"] = QtGui.QIcon()
+        # init gui
+        _version = pkg_resources.get_distribution("mauto").version
+        self.setWindowTitle("mauto v%s" % _version)
+        self.list_macros()
         # connect signals
         self.ui.filter.textChanged.connect(self.filter_changed)
         self.ui.filter.returnPressed.connect(self.filter_entered)
@@ -41,16 +45,9 @@ class Layout(QtGui.QMainWindow):
         self.ui.macros.itemSelectionChanged.connect(self.macros_changed)
         self.ui.macros.itemClicked.connect(self.macros_changed)
         self.ui.macros.itemDoubleClicked.connect(self.play)
+        self.ui.inputs.cellEntered.connect(self.inputs_entered)
         QtGui.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Delete), self, self.remove_macro)
-        # init ui
-        try:
-            _version = pkg_resources.get_distribution("mauto").version
-            self.setWindowTitle("mauto v%s" % _version)
-        except:
-            pass
-        self.list_macros()
-        self.filter_changed("")
 
     @property
     def state(self):
@@ -60,10 +57,16 @@ class Layout(QtGui.QMainWindow):
     @state.setter
     def state(self, value):
         self._state = value
-        _icon = self.ICONS.get(("add", "stop", "play")[self._state])
+        _icon = self.ICONS.get(("add", "stop", "play", "no_icon")[self._state])
         self.ui.action.setIcon(_icon)
+        self.ui.action.setEnabled(value != 3)
         css = "#MainWindow{border: 2px solid;border-color:rgb(255,0,0);}" if self._state == 1 else ""
         self.setStyleSheet(css)
+
+    @property
+    def curr_macro(self):
+        curr_item = self.ui.macros.currentItem()
+        return library.get(curr_item.text()) if curr_item else None
 
     def list_macros(self):
         self.ui.macros.setRowCount(len(library))
@@ -76,14 +79,68 @@ class Layout(QtGui.QMainWindow):
     def list_inputs(self):
         if not self.curr_macro:
             return
-        self.ui.inputs.setRowCount(len(self.curr_macro.inputs))
-        for row, items in enumerate(self.curr_macro.inputs.iteritems()):
-            for column, value in enumerate(items):
-                item = QtGui.QTableWidgetItem()
-                item.setText(value)
-                if column == 0:
-                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-                self.ui.inputs.setItem(row, column, item)
+        data = self.curr_macro.inputs
+        self.ui.inputs.setRowCount(len(data))
+        for row, key in enumerate(data):
+            item = QtGui.QTableWidgetItem()
+            item.setText(key)
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.ui.inputs.setItem(row, 0, key)
+
+    def record(self):
+        name = self.ui.filter.text()
+        # update ui
+        self.state = 1
+        item = QtGui.QTableWidgetItem(name)
+        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+        self.ui.macros.insertRow(0)
+        self.ui.macros.setItem(0, 0, item)
+        self.ui.macros.setCurrentItem(item)
+        # macro stuff
+        if library.get(name):
+            library.remove_macro(name)
+        m = library.new_macro(name)
+        m.record()
+
+    def stop(self):
+        if self.curr_macro:
+            self.curr_macro.pause()
+            library.save_macro(self.curr_macro.name)
+        self.state = 2
+        self.list_inputs()
+
+    def play(self):
+        if not self.curr_macro:
+            return
+        d = dict()
+        for i in range(self.ui.inputs.rowCount()):
+            k = self.ui.inputs.item(i, 0).text()
+            v = self.ui.inputs.item(i, 1).text()
+            if not len(v):
+                v = k
+            d[k] = v
+        self.curr_macro.play(**d)
+
+    # SLOTS
+    def inputs_entered(self, to_row, to_col):
+        from_row = self.ui.inputs.currentRow()
+        if to_row == from_row:
+            return
+        for i in range(2):
+            # get item
+            _from = self.ui.inputs.item(from_row, i)
+            self.ui.inputs.takeItem(from_row, i)
+            _to = self.ui.inputs.item(to_row, i)
+            self.ui.inputs.takeItem(to_row, i)
+            # update table
+            self.ui.inputs.setItem(to_row, i, _from)
+            self.ui.inputs.setItem(from_row, i, _to)
+        # update macro
+        ordered_keys = self.curr_macro.inputs
+        k = ordered_keys.pop(from_row)
+        ordered_keys.insert(to_row, k)
+        self.curr_macro.inputs = ordered_keys
+        library.save_macro(self.curr_macro.name)
 
     def filter_changed(self, text):
         match = False
@@ -91,7 +148,9 @@ class Layout(QtGui.QMainWindow):
             item = self.ui.macros.item(i, 0)
             match = True if text == item.text() else match
             self.ui.macros.setRowHidden(i, text not in item.text())
-        self.state = 2 if match else 0
+        k = (match == True, len(text) == 0)
+        self.state = {(True, False): 2,
+                      (False, True): 3}.get(k, 0)
 
     def filter_entered(self):
         name = self.ui.filter.text()
@@ -120,6 +179,7 @@ class Layout(QtGui.QMainWindow):
                 self.ui.macros.removeRow(i)
                 library.remove_macro(n)
                 self.list_inputs()
+        self.state = 3  # no_icon
 
     def action_clicked(self):
         if len(self.ui.filter.text()):
@@ -128,45 +188,6 @@ class Layout(QtGui.QMainWindow):
         # fallback
         if self.curr_macro:
             self.play()
-
-    def stop(self):
-        self.state = 2
-        self.list_inputs()
-        if self.curr_macro:
-            self.curr_macro.pause()
-            library.save_macro(self.curr_macro.name)
-
-    def record(self):
-        name = self.ui.filter.text()
-        # update ui
-        self.state = 1
-        item = QtGui.QTableWidgetItem(name)
-        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-        self.ui.macros.insertRow(0)
-        self.ui.macros.setItem(0, 0, item)
-        self.ui.macros.setCurrentItem(item)
-        # macro stuff
-        if library.get(name):
-            library.remove_macro(name)
-        m = library.new_macro(name)
-        m.record()
-
-    def play(self):
-        if not self.curr_macro:
-            return
-        d = dict()
-        for i in range(self.ui.inputs.rowCount()):
-            k = self.ui.inputs.item(i, 0).text()
-            v = self.ui.inputs.item(i, 1).text()
-            if not len(v):
-                v = k
-            d[k] = v
-        self.curr_macro.play(d)
-
-    @property
-    def curr_macro(self):
-        curr_item = self.ui.macros.currentItem()
-        return library.get(curr_item.text()) if curr_item else None
 
 
 def get_parent():
