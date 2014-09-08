@@ -43,10 +43,13 @@ through its `setup.py` script (_highly recommended!_).
     m = mauto.new_macro("my_macro")
     m.record()
     m.stop()
-    mauto.save_macro("my_macro")  # save to disk
+    mauto.save_macro("my_macro")
 
     # create a new macro from a maya log
     m = mauto.new_macro("my_macro", log)
+
+    # create a new macro just in memory
+    mauto.create_macro("my_macro", save=False)
     
     # list existing macros
     mauto.list_macros()
@@ -57,7 +60,7 @@ through its `setup.py` script (_highly recommended!_).
     
     # redefine inputs
     m = mauto.get_macro("my_macro")
-    print m.inputs #  [input1, input2, ...]
+    print m.inputs  # list inputs as ref -> (input1, input2, ...)
     m.play(input1=new_input1, input2=new_input2)
 
     # remove a macro from the library

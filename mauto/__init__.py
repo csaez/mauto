@@ -47,3 +47,7 @@ def remove_macro(name):
 
 def save_macro(name):
     return library.save_macro(name)
+
+
+def get_filepath(name):
+    return library.get_filepath(name)
