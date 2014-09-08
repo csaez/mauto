@@ -28,6 +28,10 @@ def show():
     gui.show()
 
 
+def select_repo():
+    gui.select_repo()
+
+
 def list_macros():
     return library.macros.keys()
 

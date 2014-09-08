@@ -50,6 +50,7 @@ class Lib(object):
         if not os.path.exists(value):
             os.makedirs(value)
         self._repo = value
+        self.reload()
 
     def reload(self):
         for f in os.listdir(self.repository):

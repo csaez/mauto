@@ -219,6 +219,15 @@ def show():
     app = Layout(parent=get_parent())
     app.show()
 
+
+def select_repo():
+    repo = QtGui.QFileDialog.getExistingDirectory(
+        parent=get_parent(), caption="Select repository directory",
+        dir=library.repository)
+    if repo:
+        library.repository = repo
+
+
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     w = Layout()

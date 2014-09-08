@@ -34,10 +34,13 @@ through its `setup.py` script (_highly recommended!_).
 
     import mauto
     
-    #  Launch the Maya GUI...
+    # Launch the main GUI...
     mauto.show()
 
-    # ... or use it through the python api.
+    # Select the repository
+    mauto.select_repo()
+
+    # ... or use it through the python API.
 
     # create a new macro
     m = mauto.new_macro("my_macro")
@@ -82,7 +85,7 @@ Running tests with coverage:
 
 ## Contributing
 
-- [Check for open issues] (https://github.com/csaez/mauto/issues) or open
+- [Check for open issues](https://github.com/csaez/mauto/issues) or open
 a fresh issue to start a discussion around a feature idea or a bug.
 - Fork the [mauto repository on Github](https://github.com/csaez/mauto)
 to start making your changes (make sure to isolate your changes in a local branch when possible).
