@@ -23,7 +23,7 @@
 import re
 
 
-BANNED_CMDS = ("nodeOutliner", )
+BANNED_CMDS = ("nodeOutliner", "doCreatePointConstraintArgList")
 
 REGEX = {
     # command -flag value REFERENCE;
@@ -36,7 +36,7 @@ REGEX = {
     "connectAttr": r'^connectAttr.*?(\w*)[\w\.]*\s(\w*)[\w\.]*\s?;$',
 }  # <---- add extra regex here!
 
-OUTPUT = r'//\s([a-zA-Z0-9\s]*)\s//'  # // REFERENCE(s) //
+OUTPUT = r'//\s([a-zA-Z0-9_\s]*)\s?//.*'  # // REFERENCE(s) //
 
 
 def str_to_list(text):

@@ -30,7 +30,7 @@ from mauto.gui.mainwindow import Ui_MainWindow
 from mauto.api.lib import library
 
 try:
-    from maya import OpenMayaUI
+    from maya import cmds, OpenMayaUI
 except ImportError:
     pass
 
@@ -89,10 +89,11 @@ class Layout(QtGui.QMainWindow):
         return library.get(curr_item.text()) if curr_item else None
 
     def list_macros(self):
-        self.ui.macros.setRowCount(len(library))
-        for i, m in enumerate(library.values()):
+        macros = library.macros.keys()
+        self.ui.macros.setRowCount(len(macros))
+        for i, m in enumerate(macros):
             item = QtGui.QTableWidgetItem()
-            item.setText(m.name)
+            item.setText(m)
             item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
             self.ui.macros.setItem(i, 0, item)
 
@@ -105,7 +106,7 @@ class Layout(QtGui.QMainWindow):
             item = QtGui.QTableWidgetItem()
             item.setText(key)
             item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-            self.ui.inputs.setItem(row, 0, key)
+            self.ui.inputs.setItem(row, 0, item)
 
     def record(self):
         name = self.ui.filter.text()
@@ -140,6 +141,12 @@ class Layout(QtGui.QMainWindow):
                 v = k
             d[k] = v
         self.curr_macro.play(**d)
+
+    def inputs_from_selection(self):
+        for i, x in enumerate(cmds.ls(sl=True)):
+            item = QtGui.QTableWidgetItem()
+            item.setText(x)
+            self.ui.inputs.setItem(i, 1, item)
 
     # SLOTS
     def inputs_entered(self, to_row, to_col):
@@ -187,6 +194,7 @@ class Layout(QtGui.QMainWindow):
         if not self.curr_macro:
             return
         self.list_inputs()
+        self.inputs_from_selection()
         self.state = 2
 
     def remove_macro(self):

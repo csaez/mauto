@@ -100,28 +100,32 @@ class Macro(object):
     def play(self, **options):
         if not self.references:
             return False
-        references = self.references.copy()
-        for k, v in options:
-            if k in self.inputs:
-                references[k] = v
+        # re-parse the log, fresh start
+        p = parser.Parse(self.log)
+        for k in ("actions", "references", "inputs"):
+            setattr(self, k, getattr(p, k))
+        # update ref dict
+        self.references.update(options)
+        cmds.undoInfo(openChunk=True)  # group undo
         try:
-            cmds.undoInfo(openChunk=True)  # group undo
             for a in self.actions:
                 code = a["sloc"]
-                for k, v in references.iteritems():
-                    if k in code and v is not None:
-                        code = code.replace(k, v)
+                # replace dependencies from references table
+                for x in parser.get_deps(code):
+                    r = self.references.get(x)
+                    if isinstance(r, basestring):
+                        code = code.replace(x, r)
+                # eval code
                 out = mel.eval(code)
+                # init output into references
                 if isinstance(out, (list, tuple)):
                     for i, x in enumerate(out):
-                        references[a["out"][i]] = x
+                        self.references[a["out"][i]] = x
                 else:
                     if a.get("out"):
-                        references[a["out"]] = out
-        except Exception as err:
-            print "ERROR: %s" % err
-            cmds.undoInfo(closeChunk=True)
-            cmds.undo()
+                        self.references[a["out"][0]] = out
+        except:
+            raise  # raise latest exception
         finally:
             cmds.undoInfo(closeChunk=True)
         return True

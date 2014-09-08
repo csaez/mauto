@@ -76,7 +76,7 @@ class Lib(object):
             self.macros[name] = (m, None)
             if save:
                 self.save_macro(name)
-            return self.macros.get(name)
+            return self.macros.get(name)[0]
         return None
 
     def save_macro(self, name, filename=None):

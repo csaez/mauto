@@ -116,3 +116,20 @@ def test_references():
                         "locator2", "locatorShape2", "pCube1")
     for x in expected_results:
         assert x in parsed.references
+
+
+def test_constraint():
+    log = "CreateLocator;\nspaceLocator -p 0 0 0;\n// locator1 // \nTranslateToolWithSnapMarkingMenu;\nMarkingMenuPopDown;\nmove -r -11.515207 2.740201 9.460056 ;\nCreateLocator;\nspaceLocator -p 0 0 0;\n// locator2 // \nTranslateToolWithSnapMarkingMenu;\nMarkingMenuPopDown;\nmove -r 4.151112 0.946615 -4.861073 ;\nCreateLocator;\nspaceLocator -p 0 0 0;\n// locator3 // \nselect -r locator1 ;\nselect -tgl locator2 ;\nselect -tgl locator3 ;\nPointConstraint;\ndoCreatePointConstraintArgList 1 { \"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"\",\"1\" };\npointConstraint -offset 0 0 0 -weight 1;\n// locator3_pointConstraint1 // \n"
+    parsed = p.Parse(log)
+    assert len(parsed.inputs) == 0
+    expected_results = ["locator1", "locator2", "locator3",
+                        "locator3_pointConstraint1"]
+    for k, v in parsed.references.iteritems():
+        assert k in expected_results
+        assert v == -1
+    for a in parsed.actions:
+        print a.get("out")
+        for o in a.get("out"):
+            if o in expected_results:
+                expected_results.remove(o)
+    assert len(expected_results) == 0
