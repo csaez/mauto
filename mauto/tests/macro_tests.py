@@ -1,4 +1,3 @@
-import os
 import mock
 from nose import with_setup
 from ..api import macro
@@ -62,7 +61,7 @@ def test_fromfile():
 
 @with_setup(setup_empty, teardown)
 def test_record():
-    with mock.patch("mauto.api.macro.mc", create=True):
+    with mock.patch("mauto.api.macro.cmds", create=True):
         m = library.get("testsuite")
         m.record()
         assert m.recording == True
@@ -76,15 +75,16 @@ def test_fromlog():
 @with_setup(setup_fromlog, teardown)
 def test_inputs():
     m = library.get("testsuite")
+    print m.actions, m.inputs
     assert m.inputs == ['joint3', 'joint1', 'locator1']
 
 
 @with_setup(setup_fromlog, teardown)
 def test_play():
-    with mock.patch("mauto.api.macro.mc", create=True) as mc:
+    with mock.patch("mauto.api.macro.cmds", create=True) as cmds:
         # mock all the things!
-        mc.ikHandle.return_value = ["ikHandle1", "effector1"]
-        mc.poleVectorConstraint.return_value = "ikHandle1_poleVectorConstraint1"
+        cmds.ikHandle.return_value = ["ikHandle1", "effector1"]
+        cmds.poleVectorConstraint.return_value = "ikHandle1_poleVectorConstraint1"
         with mock.patch("mauto.api.macro.mel", create=True) as mel:
             return_values = {
                 "ikHandle -sol ikRPsolver ;": ("ikHandle1", "effector1"),
@@ -95,44 +95,14 @@ def test_play():
             assert m.play() == True
 
 
-def setup_logfile():
-    setup_empty()
-    # setup
+@with_setup(setup_empty, teardown)
+def test_pause():
     m = library.get("testsuite")
-    filepath = m.filepath.replace("testsuite.json", "temp.txt")
-    with open(filepath, "w") as fp:
-        fp.write("select -r locator1 ;")
-
-
-def teardown_logfile():
-    m = library.get("testsuite")
-    filepath = m.filepath.replace("testsuite.json", "temp.txt")
-    os.remove(filepath)
-    teardown()
-
-
-@with_setup(setup_logfile, teardown_logfile)
-def test_stop():
-    m = library.get("testsuite")
-    filepath = m.filepath.replace("testsuite.json", "temp.txt")
-    with mock.patch("mauto.api.macro.mc", create=True) as mc:
-        mc.scriptEditorInfo.return_value = filepath
-        m.record()
-        m.stop()
-        assert m.actions == [{'sloc': 'select -r locator1 ;',
-                              'out': [], }]
-
-
-@with_setup(setup_logfile, teardown_logfile)
-def test_pause1():
-    m = library.get("testsuite")
-    filepath = m.filepath.replace("testsuite.json", "temp.txt")
-    with mock.patch("mauto.api.macro.mc", create=True) as mc:
-        mc.scriptEditorInfo.return_value = filepath
-        m = library.get("testsuite")
-        m.record()
+    m.recording = True
+    with mock.patch("mauto.api.macro.cmds", create=True) as cmds:
+        cmds.scriptEditorInfo.return_value = library.get_filepath("testsuite")
         m.pause()
-        assert m.recording == False
+    assert m.recording == False
 
 
 @with_setup(setup_empty, teardown)

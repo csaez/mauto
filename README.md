@@ -43,7 +43,7 @@ through its `setup.py` script (_highly recommended!_).
     m = mauto.new_macro("my_macro")
     m.record()
     m.stop()
-    mauto.save_macro("my_macro")
+    mauto.save_macro("my_macro")  # save to disk
 
     # create a new macro from a maya log
     m = mauto.new_macro("my_macro", log)
@@ -57,12 +57,14 @@ through its `setup.py` script (_highly recommended!_).
     
     # redefine inputs
     m = mauto.get_macro("my_macro")
-    refs = m.inputs #  dict of ext references
-    refs["locator1"] = "pCube"
-    m.play(refs)
+    m.inputs #  [input1, input2, ...]
+    m.play(refs, input1=new_input1, input2=new_input2)
 
     # remove a macro from the library
     mauto.remove_macro("my_macro")
+
+    # get macro filepath
+    mauto.get_filepath("my_macro")
 
 #### Testing (optional)
 
@@ -87,7 +89,3 @@ as expected.
 published. :)
 
 Make sure to add yourself to `CONTRIBUTORS.md`
-
-## Notes
-
-For more info, refer to the [documentation](http://mauto.readthedocs.org).

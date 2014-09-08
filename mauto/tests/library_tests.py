@@ -41,7 +41,7 @@ def test_remove_macro1():
 
 @with_setup(setup, teardown)
 def test_remove_macro2():
-    fp = library.get("testsuite").filepath
+    fp = library.get_filepath("testsuite")
     library.remove_macro("testsuite")
     assert os.path.exists(fp) is False
 
@@ -53,10 +53,10 @@ def test_save_macro():
 
 @with_setup(setup, teardown)
 def test_reload():
-    lenA = len(library)
-    library.clear()
+    lenA = len(library.macros)
+    library.macros.clear()
     library.reload()
-    assert len(library) == lenA
+    assert len(library.macros) == lenA
 
 
 def test_newrepo():
@@ -64,7 +64,10 @@ def test_newrepo():
         os.path.join(os.path.expanduser("~"), "temp_mauto"))
     if os.path.exists(new_repo):
         os.removedirs(new_repo)
-    Lib(new_repo)
+    l = Lib()
+    _r = l.repository
+    l.repository = new_repo
     r = os.path.exists(new_repo)
     os.removedirs(new_repo)
+    l.repository = _r
     assert r

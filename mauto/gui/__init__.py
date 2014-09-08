@@ -1,16 +1,34 @@
+# The MIT License (MIT)
+
+# Copyright (c) 2014 Cesar Saez
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 import os
 import sys
-import pkg_resources
 
+from PySide import QtGui, QtCore
+from shiboken import wrapInstance
+
+from mauto.gui.mainwindow import Ui_MainWindow
 from mauto.api.lib import library
 
-try:
-    from mauto.gui.mainwindow import Ui_MainWindow
-    from PySide import QtGui, QtCore
-    from shiboken import wrapInstance
-except ImportError:
-    class QtGui():
-        QMainWindow = object
 try:
     from maya import OpenMayaUI
 except ImportError:
@@ -18,10 +36,13 @@ except ImportError:
 
 
 class Layout(QtGui.QMainWindow):
-    IMAGES = {"play": "iconmonstr-video-play-icon-256.png",
-              "stop": "iconmonstr-stop-2-icon-256.png",
-              "record": "iconmonstr-microphone-3-icon-256.png",
-              "add": "iconmonstr-plus-4-icon-256.png"}
+    IMAGES = {
+        "play": "iconmonstr-video-play-icon-256.png",
+        "stop": "iconmonstr-stop-2-icon-256.png",
+        "record": "iconmonstr-microphone-3-icon-256.png",
+        "add": "iconmonstr-plus-4-icon-256.png",
+        "no_icon": "iconmonstr-magnifier-4-icon-256.png"
+    }
 
     def __init__(self, *args, **kwds):
         super(Layout, self).__init__(*args, **kwds)
@@ -33,10 +54,8 @@ class Layout(QtGui.QMainWindow):
                            for k, v in self.IMAGES.iteritems()])
         self.ICONS = dict([(k, QtGui.QIcon(v))
                           for k, v in self.IMAGES.iteritems()])
-        self.ICONS["no_icon"] = QtGui.QIcon()
         # init gui
-        _version = pkg_resources.get_distribution("mauto").version
-        self.setWindowTitle("mauto v%s" % _version)
+        self.setWindowTitle("mauto: as in Maya Automation")
         self.list_macros()
         # connect signals
         self.ui.filter.textChanged.connect(self.filter_changed)
@@ -48,6 +67,7 @@ class Layout(QtGui.QMainWindow):
         self.ui.inputs.cellEntered.connect(self.inputs_entered)
         QtGui.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Delete), self, self.remove_macro)
+        self.filter_changed("")
 
     @property
     def state(self):
@@ -193,6 +213,11 @@ class Layout(QtGui.QMainWindow):
 def get_parent():
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     return wrapInstance(long(ptr), QtGui.QMainWindow)
+
+
+def show():
+    app = Layout(parent=get_parent())
+    app.show()
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)

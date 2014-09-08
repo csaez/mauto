@@ -34,3 +34,6 @@ def test_remove_macro():
 @with_setup(setup, teardown)
 def test_save_macro():
     assert mauto.save_macro("testsuite")
+
+def test_show():
+    assert mauto.show is not None

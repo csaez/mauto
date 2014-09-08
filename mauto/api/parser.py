@@ -22,38 +22,21 @@
 
 import re
 
+
+BANNED_CMDS = ("nodeOutliner", )
+
 REGEX = {
     # command -flag value REFERENCE;
     "general": r'-[a-zA-Z]+\s[a-zA-Z0-9]*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;',
     # command "REFERENCE.attr" value;
     "attr": r'.*\s\"([a-zA-Z][a-zA-Z0-9]*).*;',
     # select -flag value REFERENCE(s);
-    "select": r'select\s\-\w*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;'
+    "select": r'select\s\-\w*\s([a-zA-Z][a-zA-Z0-9\s\.]+)\s?;',
+    # connectAttr -flag REF1.attr REF2.Attr;
+    "connectAttr": r'^connectAttr.*?(\w*)[\w\.]*\s(\w*)[\w\.]*\s?;$',
 }  # <---- add extra regex here!
 
 OUTPUT = r'//\s([a-zA-Z0-9\s]*)\s//'  # // REFERENCE(s) //
-
-
-def parse(MEL):
-    actions = list()
-    for i, sloc in enumerate(MEL.split("\n")):
-        if not len(sloc) or sloc[0].isupper():
-            continue
-        if sloc.startswith("//"):
-            if i and not actions[-1]["sloc"].startswith("parent"):
-                for x in re.compile(OUTPUT).findall(sloc):
-                    actions[-1]["out"] = str_to_list(x)
-        else:
-            actions.append({"sloc": sloc, "out": list()})
-    return actions
-
-
-def get_deps(MEL):
-    deps = set()
-    for expr in REGEX.values():
-        for x in re.compile(expr).findall(MEL):
-            deps = deps.union(set(str_to_list(x)))
-    return list(deps)
 
 
 def str_to_list(text):
@@ -74,3 +57,49 @@ def str_to_list(text):
             x = x.split(".")[0]
         result[i] = x
     return result
+
+
+def get_deps(code):
+    deps = set()
+    for expr in REGEX.values():
+        for x in re.compile(expr).findall(code):
+            _add = str_to_list(x) if isinstance(x, basestring) else x
+            deps = deps.union(set(_add))
+    return list(deps)
+
+
+class Parse(object):
+
+    def __init__(self, code):
+        self.actions = self.get_actions(code)
+        self.references = self.get_references()
+        self.inputs = self.get_inputs()
+
+    def get_actions(self, code):
+        actions = list()
+        for i, sloc in enumerate(code.splitlines()):
+            v = (not len(sloc),
+                 sloc[0].isupper(),
+                 sloc.split(" ")[0] in BANNED_CMDS)
+            if any(v):
+                continue
+            if sloc.startswith("//"):
+                if i and not actions[-1]["sloc"].startswith("parent"):
+                    for x in re.compile(OUTPUT).findall(sloc):
+                        actions[-1]["out"].extend(str_to_list(x))
+            else:
+                actions.append({"sloc": sloc, "out": list()})
+        return actions
+
+    def get_references(self):
+        t = dict()
+        for a in self.actions:
+            for o in a["out"]:
+                t[o] = -1  # set un-initiated
+            for ref in get_deps(a["sloc"]):
+                t[ref] = t.get(ref)
+        return t
+
+    def get_inputs(self):
+        return [k for k, v in self.references.iteritems()
+                if v is None]

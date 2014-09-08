@@ -23,8 +23,7 @@
 from . import parser
 
 try:
-    from maya import cmds as mc
-    from maya import mel
+    from maya import cmds, mel
 except ImportError:
     pass
 
@@ -32,19 +31,16 @@ except ImportError:
 class Macro(object):
 
     def __init__(self, name):
-        super(Macro, self).__init__()
         self.name = name
-        self.actions = list()
-
-        self.filepath = None
-        self._tempfile = "mauto_tempHistoryLog.txt"
+        self.log = ""
+        self.actions = None
+        self.references = None
+        self.inputs = None
         self.recording = False
+        self._logfile = "mauto_tempHistoryLog.txt"
 
     @classmethod
     def from_data(cls, data):
-        """
-        De-serialize an instance from data dict.
-        """
         if cls.is_valid(data):
             m = cls(data["name"])
             m.deserialize(data)
@@ -53,117 +49,79 @@ class Macro(object):
     @classmethod
     def from_log(cls, name, log):
         m = cls(name)
-        m.actions.extend(parser.parse(log))
+        m.log = log
+        m.stop()  # parse the log
         return m
 
     @staticmethod
     def is_valid(data):
-        """
-        Returns a bool validating data dict.
-        """
         try:
             validate = {"filetype": "mauto_macro", "version": 0.1}
             return all([data.get(k) == v for k, v in validate.iteritems()])
         except AttributeError:
             return False
 
-    @property
-    def inputs(self):
-        """
-        Returns a list of external references.
-        """
-        if not hasattr(self, "_inputs"):
-            self._inputs = [k for k, v in self._template().iteritems()
-                            if v is None]
-        return self._inputs
-
-    @inputs.setter
-    def inputs(self, value):
-        lenght = len(value)
-        if lenght == len(self.inputs):
-            self._inputs = value
-        else:
-            print "ERROR: Make sure the input list has %d items." % lenght
-
-    def _template(self):
-        t = dict()
-        for a in self.actions:
-            for o in a["out"]:
-                t[o] = -1  # set un-initiated
-            for ref in parser.get_deps(a["sloc"]):
-                t[ref] = t.get(ref)
-        return t
-
-    def record(self):
-        """
-        Start recording a log with the actions done in the Maya GUI.
-        """
-        mc.scriptEditorInfo(historyFilename=self._tempfile, writeHistory=True)
-        self.recording = True
-
-    def play(self, **options):
-        """
-        Run the macro.
-        If options are passed, external references will be replaced by the
-        ones on the incoming dict/kwds. Otherwise it look for the same
-        references used when the macro was recorded as a fallback."""
-        # default value
-        _inputs = dict()
-        for x in self.inputs:
-            _inputs[x] = options.get(x, x)
-        # merge input with internal refs
-        ref = self._template()
-        ref.update(_inputs)
-        # run
-        mc.undoInfo(openChunk=True)  # start grouping undo
-        for a in self.actions:
-            code = a["sloc"]
-            for k, v in ref.iteritems():
-                if k in code and k != v:
-                    code = code.replace(k, v)
-            out = mel.eval(code)
-            if isinstance(out, (list, tuple)):
-                for i, x in enumerate(out):
-                    ref[a["out"][i]] = x
-            else:
-                if a.get("out"):
-                    ref[a["out"]] = out
-        mc.undoInfo(closeChunk=True)  # end grouping undo
-        return True
-
-    def stop(self):
-        """
-        Same as self.pause().
-        """
-        self.pause()
-
-    def pause(self):
-        """
-        Pauses the recording.
-        """
-        if not self.recording:
-            return
-        mc.scriptEditorInfo(writeHistory=False)
-        _tempfile = mc.scriptEditorInfo(query=True, historyFilename=True)
-        with open(_tempfile) as fp:
-            log = fp.read()
-        self.actions.extend(parser.parse(log))  # parse log
-        with open(_tempfile, "w") as fp:  # clear temp file
-            fp.write("")
-        self.recording = False
-
     def serialize(self):
-        """Returns a dict with macro's data."""
-        return {"name": self.name,
-                "actions": self.actions,
-                "inputs": self.inputs,
-                "filetype": "mauto_macro",
-                "version": 0.1,
-                "filepath": self.filepath}
+        data = {"filetype": "mauto_macro",
+                "version": 0.1, }
+        for k, v in self.__dict__.iteritems():
+            if not k.startswith("_"):
+                data[k] = v
+        return data
 
     def deserialize(self, data):
-        """Fills up the macro using the incoming data dict."""
         if self.is_valid(data):
             for k, v in data.iteritems():
                 setattr(self, k, v)
         return self.is_valid(data)
+
+    def record(self):
+        cmds.scriptEditorInfo(historyFilename=self._logfile, writeHistory=True)
+        self.recording = True
+
+    def pause(self):
+        if self.recording:
+            cmds.scriptEditorInfo(writeHistory=False)
+            _logfile = cmds.scriptEditorInfo(query=True, historyFilename=True)
+            with open(_logfile) as fp:
+                _log = fp.read()
+            self.log += _log
+            # clear temp file
+            with open(_logfile, "w") as fp:
+                fp.write("")
+            self.recording = False
+        p = parser.Parse(self.log)
+        for k in ("actions", "references", "inputs"):
+            setattr(self, k, getattr(p, k))
+
+    def stop(self):
+        self.pause()
+
+    def play(self, **options):
+        if not self.references:
+            return False
+        references = self.references.copy()
+        for k, v in options:
+            if k in self.inputs:
+                references[k] = v
+        try:
+            cmds.undoInfo(openChunk=True)  # group undo
+            for a in self.actions:
+                code = a["sloc"]
+                for k, v in references.iteritems():
+                    if k in code and v is not None:
+                        code = code.replace(k, v)
+                out = mel.eval(code)
+                if isinstance(out, (list, tuple)):
+                    for i, x in enumerate(out):
+                        references[a["out"][i]] = x
+                else:
+                    if a.get("out"):
+                        references[a["out"]] = out
+        except Exception as err:
+            print "ERROR: %s" % err
+            cmds.undoInfo(closeChunk=True)
+            cmds.undo()
+        finally:
+            cmds.undoInfo(closeChunk=True)
+        return True
