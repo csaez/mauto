@@ -57,8 +57,8 @@ through its `setup.py` script (_highly recommended!_).
     
     # redefine inputs
     m = mauto.get_macro("my_macro")
-    m.inputs #  [input1, input2, ...]
-    m.play(refs, input1=new_input1, input2=new_input2)
+    print m.inputs #  [input1, input2, ...]
+    m.play(input1=new_input1, input2=new_input2)
 
     # remove a macro from the library
     mauto.remove_macro("my_macro")
