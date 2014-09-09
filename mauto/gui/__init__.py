@@ -58,6 +58,7 @@ class Layout(QtGui.QMainWindow):
         self.setWindowTitle("mauto: as in Maya Automation")
         self.list_macros()
         # connect signals
+        self.ui.from_selection.clicked.connect(self.from_selection_clicked)
         self.ui.filter.textChanged.connect(self.filter_changed)
         self.ui.filter.returnPressed.connect(self.filter_entered)
         self.ui.action.clicked.connect(self.action_clicked)
@@ -82,6 +83,9 @@ class Layout(QtGui.QMainWindow):
         self.ui.action.setEnabled(value != 3)
         css = "#MainWindow{border: 2px solid;border-color:rgb(255,0,0);}" if self._state == 1 else ""
         self.setStyleSheet(css)
+        # update inputs
+        clear = lambda: self.ui.inputs.setRowCount(0)
+        {0: clear, 1: lambda: None, 2: self.list_inputs, 3: clear}[value]()
 
     @property
     def curr_macro(self):
@@ -101,7 +105,7 @@ class Layout(QtGui.QMainWindow):
         if not self.curr_macro:
             return
         data = self.curr_macro.inputs
-        self.ui.inputs.setRowCount(len(data))
+        self.ui.inputs.setRowCount(len(self.curr_macro.inputs))
         for row, key in enumerate(data):
             item = QtGui.QTableWidgetItem()
             item.setText(key)
@@ -133,6 +137,8 @@ class Layout(QtGui.QMainWindow):
     def play(self):
         if not self.curr_macro:
             return
+        if self.ui.from_selection.isChecked():
+            self.from_selection_clicked()
         d = dict()
         for i in range(self.ui.inputs.rowCount()):
             k = self.ui.inputs.item(i, 0).text()
@@ -143,12 +149,22 @@ class Layout(QtGui.QMainWindow):
         self.curr_macro.play(**d)
 
     def inputs_from_selection(self):
-        for i, x in enumerate(cmds.ls(sl=True)):
-            item = QtGui.QTableWidgetItem()
-            item.setText(x)
-            self.ui.inputs.setItem(i, 1, item)
+        sel = cmds.ls(sl=True)
+        for i in range(self.ui.inputs.rowCount()):
+            try:
+                x = sel[i]
+                item = QtGui.QTableWidgetItem()
+                item.setText(x)
+                self.ui.inputs.setItem(i, 1, item)
+            except IndexError:
+                pass
 
     # SLOTS
+    def from_selection_clicked(self):
+        state = self.ui.from_selection.isChecked()
+        self.ui.inputs.setEnabled(not state)
+        self.inputs_from_selection()
+
     def inputs_entered(self, to_row, to_col):
         from_row = self.ui.inputs.currentRow()
         if to_row == from_row:
@@ -194,7 +210,8 @@ class Layout(QtGui.QMainWindow):
         if not self.curr_macro:
             return
         self.list_inputs()
-        self.inputs_from_selection()
+        if self.ui.from_selection.isChecked():
+            self.inputs_from_selection()
         self.state = 2
 
     def remove_macro(self):

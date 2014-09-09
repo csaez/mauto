@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>362</width>
+    <width>364</width>
     <height>406</height>
    </rect>
   </property>
@@ -89,6 +89,9 @@
         </property>
         <item>
          <widget class="QTableWidget" name="inputs">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -135,6 +138,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="from_selection">
+          <property name="text">
+           <string>Inputs from selection</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="action">
           <property name="enabled">
            <bool>false</bool>
@@ -176,6 +189,7 @@
   <tabstop>macros</tabstop>
   <tabstop>filter</tabstop>
   <tabstop>inputs</tabstop>
+  <tabstop>from_selection</tabstop>
   <tabstop>action</tabstop>
  </tabstops>
  <resources/>

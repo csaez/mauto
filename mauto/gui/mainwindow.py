@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Fri Aug 22 01:21:16 2014
+# Created: Mon Sep  8 21:10:53 2014
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(362, 406)
+        MainWindow.resize(364, 406)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setAutoFillBackground(False)
         self.centralwidget.setStyleSheet("")
@@ -56,6 +56,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.inputs = QtGui.QTableWidget(self.properties)
+        self.inputs.setEnabled(False)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -77,6 +78,10 @@ class Ui_MainWindow(object):
         self.inputs.horizontalHeader().setStretchLastSection(True)
         self.inputs.verticalHeader().setVisible(False)
         self.verticalLayout.addWidget(self.inputs)
+        self.from_selection = QtGui.QCheckBox(self.properties)
+        self.from_selection.setChecked(True)
+        self.from_selection.setObjectName("from_selection")
+        self.verticalLayout.addWidget(self.from_selection)
         self.action = QtGui.QPushButton(self.properties)
         self.action.setEnabled(False)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -97,7 +102,8 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.macros, self.filter)
         MainWindow.setTabOrder(self.filter, self.inputs)
-        MainWindow.setTabOrder(self.inputs, self.action)
+        MainWindow.setTabOrder(self.inputs, self.from_selection)
+        MainWindow.setTabOrder(self.from_selection, self.action)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "mauto", None, QtGui.QApplication.UnicodeUTF8))
@@ -105,4 +111,5 @@ class Ui_MainWindow(object):
         self.macros.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("MainWindow", "Names", None, QtGui.QApplication.UnicodeUTF8))
         self.inputs.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("MainWindow", "Input", None, QtGui.QApplication.UnicodeUTF8))
         self.inputs.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("MainWindow", "Value", None, QtGui.QApplication.UnicodeUTF8))
+        self.from_selection.setText(QtGui.QApplication.translate("MainWindow", "Inputs from selection", None, QtGui.QApplication.UnicodeUTF8))
 

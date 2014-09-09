@@ -23,7 +23,7 @@
 import re
 
 
-BANNED_CMDS = ("nodeOutliner", "doCreatePointConstraintArgList")
+BANNED_CMDS = ("nodeOutliner", "doCreate")
 
 REGEX = {
     # command -flag value REFERENCE;
@@ -80,7 +80,7 @@ class Parse(object):
         for i, sloc in enumerate(code.splitlines()):
             v = (not len(sloc),
                  sloc[0].isupper(),
-                 sloc.split(" ")[0] in BANNED_CMDS)
+                 any([sloc.startswith(x) for x in BANNED_CMDS]))
             if any(v):
                 continue
             if sloc.startswith("//"):
