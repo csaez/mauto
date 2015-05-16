@@ -30,7 +30,7 @@ through its `setup.py` script (_highly recommended!_).
     mayapy setup.py install
 
 
-## Ussage
+## Usage
 
     import mauto
     

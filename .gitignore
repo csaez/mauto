@@ -221,3 +221,4 @@ env/
 ## Sublime
 #############
 *.sublime-*
+.ropeproject/

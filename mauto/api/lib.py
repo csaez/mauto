@@ -39,8 +39,10 @@ class Lib(object):
             settings = QSettings("csaez", "mauto")
             self._repo = settings.value("repo")
             if not self._repo:
-                self._repo = os.path.normpath(os.path.join(
-                    os.path.expanduser("~"), "mauto"))
+                self._repo = os.path.normpath(
+                    os.path.join(
+                        os.path.expanduser("~"),
+                        "mauto"))
         return self._repo
 
     @repository.setter

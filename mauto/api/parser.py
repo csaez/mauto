@@ -83,13 +83,15 @@ class Parse(object):
                  any([sloc.startswith(x) for x in BANNED_CMDS]))
             if any(v):
                 continue
-            if sloc.startswith("//"):
+            if sloc.startswith("//") and len(actions):
                 if i and not actions[-1]["sloc"].startswith("parent"):
                     for x in re.compile(OUTPUT).findall(sloc):
                         actions[-1]["out"].extend(str_to_list(x))
-            else:
+            elif not sloc.startswith("//"):
                 actions.append({"sloc": sloc, "out": list()})
-        return actions
+        # return actions without duplicates
+        return [{"sloc": x["sloc"], "out": list(set(x["out"]))}
+                for x in actions]
 
     def get_references(self):
         t = dict()

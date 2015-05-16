@@ -21,11 +21,21 @@
 # THE SOFTWARE.
 
 from . import parser
+from . import cache  # dumb module used to monkeypatch/share states
 
 try:
     from maya import cmds, mel
 except ImportError:
     pass
+
+
+def mauto_job():
+    curr_dag = set(cmds.ls(dag=True))
+    new = curr_dag - cache.dag
+    if len(new):
+        print "// %s //" % " ".join(new)
+        cache.dag = curr_dag
+    return new
 
 
 class Macro(object):
@@ -38,6 +48,10 @@ class Macro(object):
         self.inputs = None
         self.recording = False
         self._logfile = "mauto_tempHistoryLog.txt"
+
+        # init global scene cache
+        # used to subtract nodes on a scriptjob
+        cache.dag = set()
 
     @classmethod
     def from_data(cls, data):
@@ -78,8 +92,18 @@ class Macro(object):
     def record(self):
         cmds.scriptEditorInfo(historyFilename=self._logfile, writeHistory=True)
         self.recording = True
+        # set scriptjob
+        if not len(cache.dag):
+            cache.dag = set(cmds.ls(dag=True))
+        job_number = cmds.scriptJob(event=("DagObjectCreated", mauto_job))
+        cache.job_number = job_number
 
     def pause(self):
+        # kill scriptjob
+        for j in cmds.scriptJob(listJobs=True):
+            if j.startswith("{}:".format(cache.job_number)):
+                cmds.scriptJob(kill=cache.job_number, force=True)
+        # record
         if self.recording:
             cmds.scriptEditorInfo(writeHistory=False)
             _logfile = cmds.scriptEditorInfo(query=True, historyFilename=True)
@@ -108,24 +132,24 @@ class Macro(object):
         self.references.update(options)
         cmds.undoInfo(openChunk=True)  # group undo
         try:
-            for a in self.actions:
+            for j, a in enumerate(self.actions):
                 code = a["sloc"]
-                # replace dependencies from references table
+                # replace dependencies from reference table
                 for x in parser.get_deps(code):
                     r = self.references.get(x)
                     if isinstance(r, basestring):
                         code = code.replace(x, r)
                 # eval code
                 out = mel.eval(code)
-                # init output into references
+                # init outputs into reference table
                 if isinstance(out, (list, tuple)):
                     for i, x in enumerate(out):
                         self.references[a["out"][i]] = x
                 else:
                     if a.get("out"):
                         self.references[a["out"][0]] = out
-        except:
-            raise  # raise latest exception
+        except Exception as err:
+            raise err
         finally:
             cmds.undoInfo(closeChunk=True)
         return True
