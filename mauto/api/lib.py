@@ -43,6 +43,8 @@ class Lib(object):
                     os.path.join(
                         os.path.expanduser("~"),
                         "mauto"))
+        if not os.path.exists(self._repo):
+            os.makedirs(self._repo)
         return self._repo
 
     @repository.setter

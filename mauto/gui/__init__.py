@@ -24,15 +24,10 @@ import os
 import sys
 
 from PySide import QtGui, QtCore
-from shiboken import wrapInstance
+# from shiboken import wrapInstance
 
 from mauto.gui.mainwindow import Ui_MainWindow
 from mauto.api.lib import library
-
-try:
-    from maya import cmds, OpenMayaUI
-except ImportError:
-    pass
 
 
 class Layout(QtGui.QMainWindow):
@@ -50,8 +45,9 @@ class Layout(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         # args
-        self.IMAGES = dict([(k, os.path.join(os.path.dirname(__file__), "images", v))
-                           for k, v in self.IMAGES.iteritems()])
+        self.IMAGES = dict([(k, os.path.join(
+            os.path.dirname(__file__), "images", v))
+            for k, v in self.IMAGES.iteritems()])
         self.ICONS = dict([(k, QtGui.QIcon(v))
                           for k, v in self.IMAGES.iteritems()])
         # init gui
@@ -81,7 +77,9 @@ class Layout(QtGui.QMainWindow):
         _icon = self.ICONS.get(("add", "stop", "play", "no_icon")[self._state])
         self.ui.action.setIcon(_icon)
         self.ui.action.setEnabled(value != 3)
-        css = "#MainWindow{border: 2px solid;border-color:rgb(255,0,0);}" if self._state == 1 else ""
+        css = "#MainWindow{border: 2px solid;border-color:rgb(255,0,0);}"
+        if self._state != 1:
+            css = str()
         self.setStyleSheet(css)
         # update inputs
         clear = lambda: self.ui.inputs.setRowCount(0)
@@ -149,6 +147,7 @@ class Layout(QtGui.QMainWindow):
         self.curr_macro.play(**d)
 
     def inputs_from_selection(self):
+        from maya import cmds
         sel = cmds.ls(sl=True)
         for i in range(self.ui.inputs.rowCount()):
             try:
@@ -191,7 +190,7 @@ class Layout(QtGui.QMainWindow):
             item = self.ui.macros.item(i, 0)
             match = True if text == item.text() else match
             self.ui.macros.setRowHidden(i, text not in item.text())
-        k = (match == True, len(text) == 0)
+        k = (match, len(text) == 0)
         self.state = {(True, False): 2,
                       (False, True): 3}.get(k, 0)
 
@@ -236,12 +235,20 @@ class Layout(QtGui.QMainWindow):
 
 
 def get_parent():
-    ptr = OpenMayaUI.MQtUtil.mainWindow()
-    return wrapInstance(long(ptr), QtGui.QMainWindow)
+    parent = QtGui.QApplication.activeWindow()
+    if parent is None:
+        return None
+    _ = parent.parent()
+    while _:
+        parent = _
+        _ = parent.parent()
+    return parent
 
 
 def show():
-    app = Layout(parent=get_parent())
+    p = get_parent()
+    kwargs = {"parent": get_parent()} if p else {}
+    app = Layout(**kwargs)
     app.show()
 
 
